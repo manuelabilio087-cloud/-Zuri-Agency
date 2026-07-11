@@ -9,7 +9,7 @@ src/
 ├── config/          # env, database (Prisma), constantes (limites de plano)
 ├── modules/
 │   ├── auth/         # registo, login, refresh, logout — completo
-│   └── companies/    # pesquisa via Google Places API, com cache de 30 dias — completo
+│   └── companies/    # pesquisa (Google Places), website analyzer, scoring — completo
 ├── middlewares/       # error handler, controlo de limites por plano
 ├── database/          # (migrations vivem em /prisma)
 └── app.ts / server.ts
@@ -41,15 +41,30 @@ prisma/
 | POST | `/api/auth/login` | Login (email, password) |
 | POST | `/api/auth/refresh` | Novo access token via cookie de refresh |
 | POST | `/api/auth/logout` | Termina sessão |
-| POST | `/api/companies/search` | Pesquisa empresas por `category` + `city` (cache 30 dias → Google Places API) |
+| POST | `/api/companies/search` | Pesquisa empresas por `category` + `city` (cache 30 dias → Google Places API), dispara análise em background |
+| GET | `/api/companies/:id` | Ficha completa da empresa, com `analysis` (Website Score, SEO Score, Sales Score, Lead Temperature, serviço recomendado) |
+| GET | `/api/companies/:id/analysis-status` | Polling: `{ status: "pending" \| "done", analysis }` |
 | GET | `/health` | Health check |
 
 ### Google Places — configuração necessária
 
 Preenche `GOOGLE_PLACES_API_KEY` no `.env` com uma chave com a **Places API (New)** ativada no Google Cloud Console. Sem esta chave, `/api/companies/search` devolve erro 503 (a não ser que já existam resultados em cache válidos para essa categoria/cidade).
 
+### Website Analyzer + Scoring — como funciona
+
+Depois de uma pesquisa devolver empresas, o sistema dispara automaticamente (em background, sem bloquear a resposta) a análise de cada empresa nova:
+
+1. **Sinais técnicos** (`website-analyzer.service.ts`) — HTTPS, viewport mobile, velocidade de resposta, título/meta description, headings, dados estruturados — tudo calculado sem IA.
+2. **Sinais qualitativos** — se `ANTHROPIC_API_KEY` estiver definida, o conteúdo do website é enviado ao modelo `claude-haiku-4-5-20251001` (custo-eficiente, adequado para esta tarefa estruturada) para avaliar qualidade de conteúdo, clareza de contacto, CTA e frescura visual. Sem chave configurada, estes fatores ficam a 0 (o resto do score continua a funcionar).
+3. **Scoring** (`scoring.service.ts`) — combina os sinais acima com os dados da própria empresa (rating, reviews, contacto) em `salesScore`, `leadTemperature`, `recommendedService` e `closeProbability`, e persiste tudo em `CompanyAnalysis`.
+
+O número de análises disparadas por pesquisa respeita o limite `analysesPerMonth` do plano do utilizador — se o limite for atingido, as empresas ficam sem análise (`status: "pending"` no endpoint de status) até ao próximo mês ou upgrade.
+
+> Nota de arquitetura: isto corre in-process (fire-and-forget) por já não haver fila configurada. Para produção a sério, mover para BullMQ + Redis, conforme o PRD original — fica marcado como próximo passo abaixo.
+
 ## Próximos passos técnicos
 
-- Website Analyzer (`website-analysis.job.ts`) + fila BullMQ/Redis para análise assíncrona.
-- Módulo `ai` (scoring + geração de conteúdo comercial via Anthropic API), populando `CompanyAnalysis`.
+- Mover a análise de empresas para uma fila real (BullMQ + Redis) em vez de fire-and-forget in-process.
+- Guardar `photos`/`regularOpeningHours` da Google Places API no schema, para o `googleBusinessScore` deixar de usar proxies.
+- Módulo `ai/generate-content` (scripts, emails, WhatsApp, propostas) via Anthropic API.
 - Módulo `billing` (Paysuite/Quick-e-Pay).

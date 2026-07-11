@@ -17,9 +17,10 @@ Cada pasta tem o seu próprio `README.md` com instruções de setup local e depl
 - ✅ Schema de base de dados (User, Company, CompanyAnalysis, Lead, UsageLog)
 - ✅ Controlo de limites por plano (Free/Starter/Pro)
 - ✅ Pesquisa de empresas via Google Places API, com cache de 30 dias
+- ✅ Website Analyzer + AI Sales Score + Lead Temperature + recomendação de serviço
 - ✅ Landing, registo, login, dashboard (frontend)
-- ⏳ Website Analyzer + scoring
-- ⏳ Módulo de IA (geração de conteúdo comercial)
+- ⏳ Geração de conteúdo comercial (IA)
+- ⏳ CRM visual (frontend) + páginas de pesquisa/resultado
 - ⏳ Billing (Paysuite/Quick-e-Pay)
 
 ## Deploy
