@@ -9,12 +9,12 @@ src/
 ├── config/          # env, database (Prisma), constantes (limites de plano)
 ├── modules/
 │   ├── auth/         # registo, login, refresh, logout — completo
-│   └── companies/    # stub — pronto para integrar Google Places API
+│   └── companies/    # pesquisa via Google Places API, com cache de 30 dias — completo
 ├── middlewares/       # error handler, controlo de limites por plano
 ├── database/          # (migrations vivem em /prisma)
 └── app.ts / server.ts
 prisma/
-└── schema.prisma      # User, Company, Analysis, Lead, UsageLog
+└── schema.prisma      # User, Company, CompanyAnalysis, Lead, UsageLog
 ```
 
 ## Correr localmente
@@ -41,12 +41,15 @@ prisma/
 | POST | `/api/auth/login` | Login (email, password) |
 | POST | `/api/auth/refresh` | Novo access token via cookie de refresh |
 | POST | `/api/auth/logout` | Termina sessão |
-| GET | `/api/companies/search` | Placeholder — protegido, respeita limite do plano |
+| POST | `/api/companies/search` | Pesquisa empresas por `category` + `city` (cache 30 dias → Google Places API) |
 | GET | `/health` | Health check |
+
+### Google Places — configuração necessária
+
+Preenche `GOOGLE_PLACES_API_KEY` no `.env` com uma chave com a **Places API (New)** ativada no Google Cloud Console. Sem esta chave, `/api/companies/search` devolve erro 503 (a não ser que já existam resultados em cache válidos para essa categoria/cidade).
 
 ## Próximos passos técnicos
 
-- Implementar `places.service.ts` (Google Places API) dentro de `modules/companies`.
-- Implementar `website-analyzer.service.ts` + fila BullMQ/Redis para análise assíncrona.
-- Módulo `ai` (scoring + geração de conteúdo comercial via Anthropic API).
+- Website Analyzer (`website-analysis.job.ts`) + fila BullMQ/Redis para análise assíncrona.
+- Módulo `ai` (scoring + geração de conteúdo comercial via Anthropic API), populando `CompanyAnalysis`.
 - Módulo `billing` (Paysuite/Quick-e-Pay).

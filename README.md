@@ -14,10 +14,10 @@ Cada pasta tem o seu próprio `README.md` com instruções de setup local e depl
 ## Estado atual
 
 - ✅ Auth completo (registo, login, refresh token, logout)
-- ✅ Schema de base de dados (User, Company, Analysis, Lead, UsageLog)
+- ✅ Schema de base de dados (User, Company, CompanyAnalysis, Lead, UsageLog)
 - ✅ Controlo de limites por plano (Free/Starter/Pro)
+- ✅ Pesquisa de empresas via Google Places API, com cache de 30 dias
 - ✅ Landing, registo, login, dashboard (frontend)
-- ⏳ Integração Google Places API
 - ⏳ Website Analyzer + scoring
 - ⏳ Módulo de IA (geração de conteúdo comercial)
 - ⏳ Billing (Paysuite/Quick-e-Pay)

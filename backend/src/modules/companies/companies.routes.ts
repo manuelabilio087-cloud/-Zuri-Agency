@@ -1,13 +1,10 @@
 import { Router } from "express";
-import { requireAuth, AuthenticatedRequest } from "@/modules/auth/auth.middleware";
+import { requireAuth } from "@/modules/auth/auth.middleware";
 import { enforcePlanLimit } from "@/middlewares/plan-limit.middleware";
+import { companiesController } from "@/modules/companies/companies.controller";
 
 export const companiesRoutes = Router();
 
-// Placeholder: integração com Google Places API entra aqui (companies.service.ts + places.service.ts)
-companiesRoutes.get("/search", requireAuth, enforcePlanLimit("search"), async (req: AuthenticatedRequest, res) => {
-  res.status(200).json({
-    message: "Endpoint de pesquisa pronto. Integração com Google Places API por implementar.",
-    query: req.query,
-  });
-});
+// Pesquisa empresas por categoria + cidade. Usa cache local (30 dias) antes de
+// consultar a Google Places API. Regista o uso para controlo de limites por plano.
+companiesRoutes.post("/search", requireAuth, enforcePlanLimit("search"), companiesController.search);
