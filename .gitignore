@@ -1,0 +1,20 @@
+# Dependências
+node_modules/
+**/node_modules/
+
+# Builds
+backend/dist/
+frontend/.next/
+frontend/out/
+*.tsbuildinfo
+
+# Ambiente
+.env
+.env.local
+**/.env
+**/.env.local
+
+# Sistema / logs
+.DS_Store
+*.log
+npm-debug.log*

@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PRO
+}
+
+enum LeadStatus {
+  NOVO
+  CONTACTADO
+  EM_NEGOCIACAO
+  FECHADO
+  PERDIDO
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  plan         Plan     @default(FREE)
+  serviceType  String? // "Que tipo de serviço vende" - onboarding
+  city         String? // localização de atuação - onboarding
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+  leads         Lead[]
+  usageLogs     UsageLog[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+// Cache de empresas devolvidas pela Google Places API
+model Company {
+  id            String   @id @default(uuid())
+  placeId       String   @unique // Google Place ID
+  name          String
+  category      String?
+  address       String?
+  phone         String?
+  website       String?
+  rating        Float?
+  city          String?
+  lat           Float?
+  lng           Float?
+  fetchedAt     DateTime @default(now())
+
+  analyses Analysis[]
+  leads    Lead[]
+
+  @@index([city, category])
+  @@map("companies")
+}
+
+// Resultado da análise de maturidade digital (Website Score, SEO Score, Sales Score, Lead Temperature)
+model Analysis {
+  id             String   @id @default(uuid())
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  websiteScore   Int?
+  seoScore       Int?
+  salesScore     Int?
+  leadTemperature String? // FRIO | MORNO | QUENTE | MUITO_QUENTE
+  recommendedService String?
+  rawDetails     Json?
+  createdAt      DateTime @default(now())
+
+  @@map("analyses")
+}
+
+// CRM: empresa guardada por um utilizador como lead
+model Lead {
+  id         String     @id @default(uuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId  String
+  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  status     LeadStatus @default(NOVO)
+  notes      String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@unique([userId, companyId])
+  @@map("leads")
+}
+
+// Log de uso para controlo de limites por plano (pesquisas, análises, gerações de IA)
+model UsageLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String // "search" | "analysis" | "ai_generation"
+  createdAt DateTime @default(now())
+
+  @@index([userId, action, createdAt])
+  @@map("usage_logs")
+}
