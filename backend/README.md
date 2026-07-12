@@ -53,6 +53,8 @@ prisma/
 | GET | `/api/leads/follow-ups` | Leads ativos sem contacto há 7+ dias |
 | POST | `/api/ai/generate-content` | Gera conteúdo comercial para um lead (`{ leadId, type }`, `type` = `script`\|`email`\|`whatsapp`\|`proposta`) |
 | GET | `/api/ai/daily-priorities` | Top 15 leads a priorizar hoje, com justificação por IA — **exclusivo do plano Pro** |
+| GET | `/api/leads/export/excel` | Excel com todos os leads do utilizador — **Starter e Pro** |
+| GET | `/api/leads/:id/export/pdf` | Proposta comercial (já gerada) formatada em PDF — **exclusivo do plano Pro** |
 | GET | `/health` | Health check |
 
 ### Google Places — configuração necessária
@@ -89,7 +91,6 @@ Se o lead ainda não tiver `CompanyAnalysis` pronta (análise em background aind
 
 - Mover a análise de empresas para uma fila real (BullMQ + Redis) em vez de fire-and-forget in-process.
 - Guardar `photos`/`regularOpeningHours` da Google Places API no schema, para o `googleBusinessScore` deixar de usar proxies.
-- Exportação: `GET /leads/export/excel` (Starter+) e `GET /leads/:id/export/pdf` (Pro).
-- Módulo `billing` (Paysuite/Quick-e-Pay).
+- Módulo `billing` (Paysuite/Quick-e-Pay) — falta a documentação/credenciais dos gateways para implementar a integração real.
 - Onboarding no frontend para capturar `serviceType`/`city` do utilizador (hoje só existem no schema, o formulário falta).
 - Painel administrativo (RF12).

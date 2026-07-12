@@ -20,9 +20,11 @@ Cada pasta tem o seu próprio `README.md` com instruções de setup local e depl
 - ✅ Website Analyzer + AI Sales Score + Lead Temperature + recomendação de serviço
 - ✅ Geração de conteúdo comercial (script, email, WhatsApp, proposta)
 - ✅ CRM completo (status, notas, follow-ups) + IA de Priorização Diária (Pro)
+- ✅ Exportação: Excel (Starter+) e PDF de propostas (Pro)
 - ✅ Landing, registo, login, dashboard (frontend)
 - ⏳ Frontend: páginas de pesquisa/resultado/CRM
-- ⏳ Exportação (Excel/PDF) + Billing (Paysuite/Quick-e-Pay)
+- ⏳ Billing (Paysuite/Quick-e-Pay) — falta documentação/credenciais dos gateways
+- ⏳ Painel administrativo
 
 ## Deploy
 
