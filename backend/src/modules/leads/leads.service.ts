@@ -12,6 +12,7 @@ export interface ListLeadsFilters {
 const leadInclude = {
   company: { include: { analysis: true } },
   notes: { orderBy: { createdAt: "desc" as const } },
+  generatedContents: { orderBy: { createdAt: "desc" as const } },
 } as const;
 
 // Última interação com o lead: a nota mais recente, ou a última atualização do próprio lead

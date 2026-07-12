@@ -12,6 +12,7 @@ leadsRoutes.get("/export/excel", requireAuth, requirePlan("STARTER", "PRO"), exp
 
 leadsRoutes.post("/", requireAuth, leadsController.create);
 leadsRoutes.get("/", requireAuth, leadsController.list);
+leadsRoutes.get("/:id", requireAuth, leadsController.getById);
 leadsRoutes.patch("/:id", requireAuth, leadsController.updateStatus);
 leadsRoutes.post("/:id/notes", requireAuth, leadsController.addNote);
 leadsRoutes.get("/:id/export/pdf", requireAuth, requirePlan("PRO"), exportController.pdf);

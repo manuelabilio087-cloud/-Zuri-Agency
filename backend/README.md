@@ -51,6 +51,7 @@ prisma/
 | GET | `/api/companies/:id/analysis-status` | Polling: `{ status: "pending" \| "done", analysis }` |
 | POST | `/api/leads` | Guarda uma empresa como lead (`{ companyId }`) |
 | GET | `/api/leads` | Lista os leads do utilizador, com filtros `?status=` e `?temperature=` |
+| GET | `/api/leads/:id` | Detalhe do lead (empresa, análise, notas, conteúdos gerados) |
 | PATCH | `/api/leads/:id` | Atualiza o status do lead (regista `closedAt` se Fechado/Perdido) |
 | POST | `/api/leads/:id/notes` | Adiciona uma nota ao histórico do lead |
 | GET | `/api/leads/follow-ups` | Leads ativos sem contacto há 7+ dias |

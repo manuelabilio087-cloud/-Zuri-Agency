@@ -2,6 +2,17 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 interface ApiErrorBody {
   message?: string;
+  upgradeRequired?: boolean;
+}
+
+export class ApiError extends Error {
+  status: number;
+  upgradeRequired: boolean;
+  constructor(message: string, status: number, upgradeRequired = false) {
+    super(message);
+    this.status = status;
+    this.upgradeRequired = upgradeRequired;
+  }
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -16,7 +27,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as ApiErrorBody;
-    throw new Error(body.message ?? `Erro ${res.status}`);
+    throw new ApiError(body.message ?? `Erro ${res.status}`, res.status, body.upgradeRequired ?? false);
   }
 
   if (res.status === 204) {
@@ -30,9 +41,33 @@ function authHeader(token: string | null): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+// Descarrega um ficheiro binário (Excel/PDF) autenticado e força o "Save As" do browser.
+async function downloadFile(path: string, token: string, filename: string): Promise<void> {
+  const res = await fetch(`${API_URL}${path}`, {
+    credentials: "include",
+    headers: authHeader(token),
+  });
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as ApiErrorBody;
+    throw new ApiError(body.message ?? `Erro ${res.status}`, res.status, body.upgradeRequired ?? false);
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 export type Plan = "FREE" | "STARTER" | "PRO";
 export type LeadStatus = "NOVO" | "CONTACTADO" | "EM_NEGOCIACAO" | "FECHADO" | "PERDIDO";
 export type LeadTemperature = "frio" | "morno" | "quente" | "muito_quente";
+export type ContentType = "script" | "email" | "whatsapp" | "proposta";
 
 export interface AuthUser {
   id: string;
@@ -70,12 +105,27 @@ export interface Company {
   analysis: CompanyAnalysis | null;
 }
 
+export interface LeadNote {
+  id: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface GeneratedContent {
+  id: string;
+  type: ContentType;
+  content: Record<string, string>;
+  createdAt: string;
+}
+
 export interface Lead {
   id: string;
   status: LeadStatus;
   createdAt: string;
   updatedAt: string;
   company: Company;
+  notes?: LeadNote[];
+  generatedContents?: GeneratedContent[];
 }
 
 export interface UsageMetric {
@@ -88,6 +138,16 @@ export interface UsageResponse {
   searches: UsageMetric;
   analyses: UsageMetric;
   aiGenerations: UsageMetric;
+}
+
+export interface PrioritizedLead {
+  leadId: string;
+  companyName: string;
+  companyCategory: string;
+  salesScore: number;
+  leadTemperature: LeadTemperature;
+  daysSinceContact: number;
+  justification: string | null;
 }
 
 export const api = {
@@ -120,8 +180,28 @@ export const api = {
     return request<Lead[]>(`/api/leads${qs ? `?${qs}` : ""}`, { headers: authHeader(token) });
   },
 
+  getLead(token: string, leadId: string) {
+    return request<Lead>(`/api/leads/${leadId}`, { headers: authHeader(token) });
+  },
+
   getFollowUps(token: string) {
     return request<Lead[]>("/api/leads/follow-ups", { headers: authHeader(token) });
+  },
+
+  updateLeadStatus(token: string, leadId: string, status: LeadStatus) {
+    return request<Lead>(`/api/leads/${leadId}`, {
+      method: "PATCH",
+      headers: authHeader(token),
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  addLeadNote(token: string, leadId: string, content: string) {
+    return request<Lead>(`/api/leads/${leadId}/notes`, {
+      method: "POST",
+      headers: authHeader(token),
+      body: JSON.stringify({ content }),
+    });
   },
 
   searchCompanies(token: string, input: { category: string; city: string }) {
@@ -132,11 +212,42 @@ export const api = {
     });
   },
 
+  getCompany(token: string, id: string) {
+    return request<Company>(`/api/companies/${id}`, { headers: authHeader(token) });
+  },
+
+  getAnalysisStatus(token: string, id: string) {
+    return request<{ status: "pending" | "done"; analysis: CompanyAnalysis | null }>(
+      `/api/companies/${id}/analysis-status`,
+      { headers: authHeader(token) }
+    );
+  },
+
   saveLead(token: string, companyId: string) {
     return request<Lead>("/api/leads", {
       method: "POST",
       headers: authHeader(token),
       body: JSON.stringify({ companyId }),
     });
+  },
+
+  generateContent(token: string, input: { leadId: string; type: ContentType }) {
+    return request<GeneratedContent>("/api/ai/generate-content", {
+      method: "POST",
+      headers: authHeader(token),
+      body: JSON.stringify(input),
+    });
+  },
+
+  getDailyPriorities(token: string) {
+    return request<PrioritizedLead[]>("/api/ai/daily-priorities", { headers: authHeader(token) });
+  },
+
+  downloadLeadsExcel(token: string) {
+    return downloadFile("/api/leads/export/excel", token, `zuri-agency-leads-${Date.now()}.xlsx`);
+  },
+
+  downloadProposalPdf(token: string, leadId: string, companyName: string) {
+    return downloadFile(`/api/leads/${leadId}/export/pdf`, token, `proposta-${companyName}.pdf`);
   },
 };

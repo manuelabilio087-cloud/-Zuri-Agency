@@ -42,6 +42,15 @@ export const leadsController = {
     }
   },
 
+  async getById(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const lead = await leadsService.getOwnedLead(req.userId!, req.params.id);
+      res.status(200).json(lead);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async updateStatus(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const { status } = updateStatusSchema.parse(req.body);
