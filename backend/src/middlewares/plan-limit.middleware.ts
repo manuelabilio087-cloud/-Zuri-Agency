@@ -51,3 +51,21 @@ export function enforcePlanLimit(action: UsageAction) {
     }
   };
 }
+
+// Restringe uma rota a um ou mais planos (ex: IA de Priorização é exclusiva do Pro).
+export function requirePlan(...allowedPlans: PlanName[]) {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+      if (!user || !allowedPlans.includes(user.plan as PlanName)) {
+        return res.status(403).json({
+          message: `Esta funcionalidade está disponível apenas no${allowedPlans.length > 1 ? "s" : ""} plano${allowedPlans.length > 1 ? "s" : ""} ${allowedPlans.join(", ")}.`,
+          upgradeRequired: true,
+        });
+      }
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+}

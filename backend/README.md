@@ -10,13 +10,13 @@ src/
 ├── modules/
 │   ├── auth/         # registo, login, refresh, logout — completo
 │   ├── companies/    # pesquisa (Google Places), website analyzer, scoring — completo
-│   ├── leads/         # guardar/listar leads — mínimo funcional (CRM completo é próximo passo)
-│   └── ai/            # geração de conteúdo comercial (script/email/whatsapp/proposta) — completo
-├── middlewares/       # error handler, controlo de limites por plano
+│   ├── leads/         # CRM completo: guardar, listar+filtros, status, notas, follow-ups
+│   └── ai/            # geração de conteúdo comercial + priorização diária (Pro) — completo
+├── middlewares/       # error handler, controlo de limites por plano, controlo de plano
 ├── database/          # (migrations vivem em /prisma)
 └── app.ts / server.ts
 prisma/
-└── schema.prisma      # User, Company, CompanyAnalysis, Lead, GeneratedContent, UsageLog
+└── schema.prisma      # User, Company, CompanyAnalysis, Lead, LeadNote, GeneratedContent, UsageLog
 ```
 
 ## Correr localmente
@@ -47,8 +47,12 @@ prisma/
 | GET | `/api/companies/:id` | Ficha completa da empresa, com `analysis` (Website Score, SEO Score, Sales Score, Lead Temperature, serviço recomendado) |
 | GET | `/api/companies/:id/analysis-status` | Polling: `{ status: "pending" \| "done", analysis }` |
 | POST | `/api/leads` | Guarda uma empresa como lead (`{ companyId }`) |
-| GET | `/api/leads` | Lista os leads do utilizador, com empresa + análise incluídas |
+| GET | `/api/leads` | Lista os leads do utilizador, com filtros `?status=` e `?temperature=` |
+| PATCH | `/api/leads/:id` | Atualiza o status do lead (regista `closedAt` se Fechado/Perdido) |
+| POST | `/api/leads/:id/notes` | Adiciona uma nota ao histórico do lead |
+| GET | `/api/leads/follow-ups` | Leads ativos sem contacto há 7+ dias |
 | POST | `/api/ai/generate-content` | Gera conteúdo comercial para um lead (`{ leadId, type }`, `type` = `script`\|`email`\|`whatsapp`\|`proposta`) |
+| GET | `/api/ai/daily-priorities` | Top 15 leads a priorizar hoje, com justificação por IA — **exclusivo do plano Pro** |
 | GET | `/health` | Health check |
 
 ### Google Places — configuração necessária
@@ -85,6 +89,7 @@ Se o lead ainda não tiver `CompanyAnalysis` pronta (análise em background aind
 
 - Mover a análise de empresas para uma fila real (BullMQ + Redis) em vez de fire-and-forget in-process.
 - Guardar `photos`/`regularOpeningHours` da Google Places API no schema, para o `googleBusinessScore` deixar de usar proxies.
-- CRM completo: mudança de status do lead, notas, priorização diária (`IA de Priorização`, secção 8 do PRD).
+- Exportação: `GET /leads/export/excel` (Starter+) e `GET /leads/:id/export/pdf` (Pro).
 - Módulo `billing` (Paysuite/Quick-e-Pay).
 - Onboarding no frontend para capturar `serviceType`/`city` do utilizador (hoje só existem no schema, o formulário falta).
+- Painel administrativo (RF12).

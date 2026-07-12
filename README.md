@@ -14,15 +14,15 @@ Cada pasta tem o seu próprio `README.md` com instruções de setup local e depl
 ## Estado atual
 
 - ✅ Auth completo (registo, login, refresh token, logout)
-- ✅ Schema de base de dados (User, Company, CompanyAnalysis, Lead, GeneratedContent, UsageLog)
+- ✅ Schema de base de dados (User, Company, CompanyAnalysis, Lead, LeadNote, GeneratedContent, UsageLog)
 - ✅ Controlo de limites por plano (Free/Starter/Pro)
 - ✅ Pesquisa de empresas via Google Places API, com cache de 30 dias
 - ✅ Website Analyzer + AI Sales Score + Lead Temperature + recomendação de serviço
 - ✅ Geração de conteúdo comercial (script, email, WhatsApp, proposta)
-- ✅ Leads — guardar/listar (mínimo funcional)
+- ✅ CRM completo (status, notas, follow-ups) + IA de Priorização Diária (Pro)
 - ✅ Landing, registo, login, dashboard (frontend)
-- ⏳ CRM completo (status, notas, priorização diária) + páginas de pesquisa/resultado no frontend
-- ⏳ Billing (Paysuite/Quick-e-Pay)
+- ⏳ Frontend: páginas de pesquisa/resultado/CRM
+- ⏳ Exportação (Excel/PDF) + Billing (Paysuite/Quick-e-Pay)
 
 ## Deploy
 

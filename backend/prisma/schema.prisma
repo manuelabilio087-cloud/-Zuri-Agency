@@ -91,20 +91,33 @@ model CompanyAnalysis {
 
 // CRM: empresa guardada por um utilizador como lead
 model Lead {
-  id         String     @id @default(uuid())
-  userId     String
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyId  String
-  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  status     LeadStatus @default(NOVO)
-  notes      String?
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id        String     @id @default(uuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  status    LeadStatus @default(NOVO)
+  closedAt  DateTime? // registado quando status muda para FECHADO ou PERDIDO (métricas de conversão)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
+  notes             LeadNote[]
   generatedContents GeneratedContent[]
 
   @@unique([userId, companyId])
   @@map("leads")
+}
+
+// Histórico de notas de um lead (em vez de um único campo de texto, para suportar
+// POST /leads/:id/notes — cada interação fica registada com a sua data).
+model LeadNote {
+  id        String   @id @default(uuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+
+  @@map("lead_notes")
 }
 
 // Conteúdo comercial gerado por IA (script de chamada, email, WhatsApp, proposta) para um lead.

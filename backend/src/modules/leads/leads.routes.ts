@@ -4,10 +4,10 @@ import { leadsController } from "@/modules/leads/leads.controller";
 
 export const leadsRoutes = Router();
 
-// Guarda uma empresa (já pesquisada) como lead do utilizador.
+// Rota estática ANTES de "/:id" para não colidir com o parâmetro de rota.
+leadsRoutes.get("/follow-ups", requireAuth, leadsController.followUps);
+
 leadsRoutes.post("/", requireAuth, leadsController.create);
-
-// Lista os leads do utilizador autenticado.
 leadsRoutes.get("/", requireAuth, leadsController.list);
-
-// Nota: status, notas e follow-ups (módulo CRM completo do PRD) ficam para a próxima fase.
+leadsRoutes.patch("/:id", requireAuth, leadsController.updateStatus);
+leadsRoutes.post("/:id/notes", requireAuth, leadsController.addNote);
