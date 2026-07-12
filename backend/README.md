@@ -10,13 +10,14 @@ src/
 ├── modules/
 │   ├── auth/         # registo, login, refresh, logout — completo
 │   ├── companies/    # pesquisa (Google Places), website analyzer, scoring — completo
-│   ├── leads/         # CRM completo: guardar, listar+filtros, status, notas, follow-ups
-│   └── ai/            # geração de conteúdo comercial + priorização diária (Pro) — completo
-├── middlewares/       # error handler, controlo de limites por plano, controlo de plano
+│   ├── leads/         # CRM completo: guardar, listar+filtros, status, notas, follow-ups, exportação
+│   ├── ai/            # geração de conteúdo comercial + priorização diária (Pro) — completo
+│   └── admin/          # painel administrativo (users, métricas, MRR) — completo
+├── middlewares/       # error handler, controlo de limites por plano, controlo de plano, admin
 ├── database/          # (migrations vivem em /prisma)
 └── app.ts / server.ts
 prisma/
-└── schema.prisma      # User, Company, CompanyAnalysis, Lead, LeadNote, GeneratedContent, UsageLog
+└── schema.prisma      # User (com role), Company, CompanyAnalysis, Lead, LeadNote, GeneratedContent, UsageLog
 ```
 
 ## Correr localmente
@@ -55,7 +56,20 @@ prisma/
 | GET | `/api/ai/daily-priorities` | Top 15 leads a priorizar hoje, com justificação por IA — **exclusivo do plano Pro** |
 | GET | `/api/leads/export/excel` | Excel com todos os leads do utilizador — **Starter e Pro** |
 | GET | `/api/leads/:id/export/pdf` | Proposta comercial (já gerada) formatada em PDF — **exclusivo do plano Pro** |
+| GET | `/api/admin/users` | Lista todos os utilizadores (plano, role, nº de leads) — **exclusivo de administradores** |
+| GET | `/api/admin/metrics` | Total de utilizadores, distribuição por plano, uso do mês, MRR — **exclusivo de administradores** |
+| GET | `/api/admin/users/:id` | Detalhe de uso de um utilizador específico — **exclusivo de administradores** |
 | GET | `/health` | Health check |
+
+### Painel administrativo — como promover um utilizador a admin
+
+Não existe endpoint para se auto-promover a admin (seria um risco de segurança). Depois do utilizador se registar normalmente, promove-o diretamente na base de dados:
+
+```sql
+UPDATE users SET role = 'ADMIN' WHERE email = 'teu-email@exemplo.com';
+```
+
+Ou via Prisma Studio (`npm run prisma:studio`), editando o campo `role` do utilizador para `ADMIN`.
 
 ### Google Places — configuração necessária
 
@@ -91,6 +105,5 @@ Se o lead ainda não tiver `CompanyAnalysis` pronta (análise em background aind
 
 - Mover a análise de empresas para uma fila real (BullMQ + Redis) em vez de fire-and-forget in-process.
 - Guardar `photos`/`regularOpeningHours` da Google Places API no schema, para o `googleBusinessScore` deixar de usar proxies.
-- Módulo `billing` (Paysuite/Quick-e-Pay) — falta a documentação/credenciais dos gateways para implementar a integração real.
+- Módulo `billing` (Paysuite/Quick-e-Pay) — falta a conta e chaves de API ativas para implementar a integração real.
 - Onboarding no frontend para capturar `serviceType`/`city` do utilizador (hoje só existem no schema, o formulário falta).
-- Painel administrativo (RF12).

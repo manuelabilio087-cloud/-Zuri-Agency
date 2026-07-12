@@ -21,10 +21,10 @@ Cada pasta tem o seu próprio `README.md` com instruções de setup local e depl
 - ✅ Geração de conteúdo comercial (script, email, WhatsApp, proposta)
 - ✅ CRM completo (status, notas, follow-ups) + IA de Priorização Diária (Pro)
 - ✅ Exportação: Excel (Starter+) e PDF de propostas (Pro)
+- ✅ Painel administrativo (utilizadores, métricas, MRR)
 - ✅ Landing, registo, login, dashboard (frontend)
-- ⏳ Frontend: páginas de pesquisa/resultado/CRM
-- ⏳ Billing (Paysuite/Quick-e-Pay) — falta documentação/credenciais dos gateways
-- ⏳ Painel administrativo
+- ⏳ Frontend: páginas de pesquisa/resultado/CRM (à espera de direção visual)
+- ⏳ Billing (Paysuite/Quick-e-Pay) — conta em criação
 
 ## Deploy
 

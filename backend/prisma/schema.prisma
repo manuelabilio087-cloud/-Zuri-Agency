@@ -13,6 +13,11 @@ enum Plan {
   PRO
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 enum LeadStatus {
   NOVO
   CONTACTADO
@@ -27,6 +32,7 @@ model User {
   email        String   @unique
   passwordHash String
   plan         Plan     @default(FREE)
+  role         Role     @default(USER)
   serviceType  String? // "Que tipo de serviço vende" - onboarding
   city         String? // localização de atuação - onboarding
   createdAt    DateTime @default(now())

@@ -27,3 +27,10 @@ export const PLAN_LIMITS = {
 } as const;
 
 export type PlanName = keyof typeof PLAN_LIMITS;
+
+// Preços mensais em Metical (PRD secção 6). Usado para calcular o MRR no painel administrativo.
+export const PLAN_PRICES: Record<PlanName, number> = {
+  FREE: 0,
+  STARTER: 499,
+  PRO: 999,
+};

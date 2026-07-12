@@ -69,3 +69,16 @@ export function requirePlan(...allowedPlans: PlanName[]) {
     }
   };
 }
+
+// Restringe uma rota a utilizadores com role ADMIN (painel administrativo).
+export async function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+    if (!user || user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Acesso restrito a administradores." });
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+}

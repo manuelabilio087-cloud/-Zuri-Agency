@@ -8,6 +8,7 @@ import { authRoutes } from "@/modules/auth/auth.routes";
 import { companiesRoutes } from "@/modules/companies/companies.routes";
 import { leadsRoutes } from "@/modules/leads/leads.routes";
 import { aiRoutes } from "@/modules/ai/ai.routes";
+import { adminRoutes } from "@/modules/admin/admin.routes";
 import { errorHandler } from "@/middlewares/error-handler.middleware";
 
 export const app = express();
@@ -31,5 +32,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/companies", companiesRoutes);
 app.use("/api/leads", leadsRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use(errorHandler);
