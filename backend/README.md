@@ -9,12 +9,14 @@ src/
 ├── config/          # env, database (Prisma), constantes (limites de plano)
 ├── modules/
 │   ├── auth/         # registo, login, refresh, logout — completo
-│   └── companies/    # pesquisa (Google Places), website analyzer, scoring — completo
+│   ├── companies/    # pesquisa (Google Places), website analyzer, scoring — completo
+│   ├── leads/         # guardar/listar leads — mínimo funcional (CRM completo é próximo passo)
+│   └── ai/            # geração de conteúdo comercial (script/email/whatsapp/proposta) — completo
 ├── middlewares/       # error handler, controlo de limites por plano
 ├── database/          # (migrations vivem em /prisma)
 └── app.ts / server.ts
 prisma/
-└── schema.prisma      # User, Company, CompanyAnalysis, Lead, UsageLog
+└── schema.prisma      # User, Company, CompanyAnalysis, Lead, GeneratedContent, UsageLog
 ```
 
 ## Correr localmente
@@ -44,6 +46,9 @@ prisma/
 | POST | `/api/companies/search` | Pesquisa empresas por `category` + `city` (cache 30 dias → Google Places API), dispara análise em background |
 | GET | `/api/companies/:id` | Ficha completa da empresa, com `analysis` (Website Score, SEO Score, Sales Score, Lead Temperature, serviço recomendado) |
 | GET | `/api/companies/:id/analysis-status` | Polling: `{ status: "pending" \| "done", analysis }` |
+| POST | `/api/leads` | Guarda uma empresa como lead (`{ companyId }`) |
+| GET | `/api/leads` | Lista os leads do utilizador, com empresa + análise incluídas |
+| POST | `/api/ai/generate-content` | Gera conteúdo comercial para um lead (`{ leadId, type }`, `type` = `script`\|`email`\|`whatsapp`\|`proposta`) |
 | GET | `/health` | Health check |
 
 ### Google Places — configuração necessária
@@ -62,9 +67,24 @@ O número de análises disparadas por pesquisa respeita o limite `analysesPerMon
 
 > Nota de arquitetura: isto corre in-process (fire-and-forget) por já não haver fila configurada. Para produção a sério, mover para BullMQ + Redis, conforme o PRD original — fica marcado como próximo passo abaixo.
 
+### Geração de conteúdo comercial — como funciona
+
+`POST /api/ai/generate-content` recebe `leadId` + `type` e:
+
+1. Busca o lead (empresa + análise já calculada) e o utilizador (para saber `serviceType`, o que ele vende).
+2. Deriva as "lacunas" da empresa (`keyGaps`) a partir da análise (ex: "sem website", "poucas avaliações online").
+3. Monta o prompt correspondente ao `type` pedido — os 4 templates exatos do PRD (script de chamada, email, WhatsApp, proposta comercial).
+4. Chama o modelo `claude-sonnet-5` — mais avançado que o usado no scoring, porque aqui a qualidade do texto tem impacto direto na conversão.
+5. Persiste o resultado em `GeneratedContent`, associado ao lead, para o utilizador poder reutilizar/editar sem gerar de novo.
+
+Cada geração consome uma unidade do limite `aiGenerationsPerMonth` do plano do utilizador.
+
+Se o lead ainda não tiver `CompanyAnalysis` pronta (análise em background ainda a decorrer), o endpoint devolve `409` — o frontend deve fazer polling em `/api/companies/:id/analysis-status` antes de permitir gerar conteúdo.
+
 ## Próximos passos técnicos
 
 - Mover a análise de empresas para uma fila real (BullMQ + Redis) em vez de fire-and-forget in-process.
 - Guardar `photos`/`regularOpeningHours` da Google Places API no schema, para o `googleBusinessScore` deixar de usar proxies.
-- Módulo `ai/generate-content` (scripts, emails, WhatsApp, propostas) via Anthropic API.
+- CRM completo: mudança de status do lead, notas, priorização diária (`IA de Priorização`, secção 8 do PRD).
 - Módulo `billing` (Paysuite/Quick-e-Pay).
+- Onboarding no frontend para capturar `serviceType`/`city` do utilizador (hoje só existem no schema, o formulário falta).

@@ -101,8 +101,23 @@ model Lead {
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
+  generatedContents GeneratedContent[]
+
   @@unique([userId, companyId])
   @@map("leads")
+}
+
+// Conteúdo comercial gerado por IA (script de chamada, email, WhatsApp, proposta) para um lead.
+// Persistido para o utilizador poder reutilizar/editar sem gerar de novo (custo de IA).
+model GeneratedContent {
+  id        String   @id @default(uuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      String // script | email | whatsapp | proposta
+  content   Json
+  createdAt DateTime @default(now())
+
+  @@map("generated_contents")
 }
 
 // Log de uso para controlo de limites por plano (pesquisas, análises, gerações de IA)
