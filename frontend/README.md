@@ -25,15 +25,32 @@ src/
 │   ├── page.tsx          # landing
 │   ├── register/         # criar conta
 │   ├── login/             # entrar
-│   └── dashboard/         # área autenticada (placeholder)
+│   └── dashboard/         # dashboard principal — completo, com dados reais
+├── components/
+│   ├── dashboard-shell.tsx    # sidebar + navegação (reutilizado por todas as páginas autenticadas)
+│   ├── temperature-donut.tsx  # gráfico de distribuição de temperatura dos leads
+│   └── usage-bar.tsx          # barra de progresso de uso do plano
 ├── lib/
-│   ├── api.ts             # cliente HTTP para o backend
-│   └── auth-context.tsx   # sessão em memória (user + access token)
+│   ├── api.ts              # cliente HTTP para o backend
+│   └── auth-context.tsx    # sessão (user + token), restaurada automaticamente via cookie ao recarregar a página
 ```
+
+## Design
+
+Dashboard escuro com glassmorphism (inspirado numa referência visual fintech fornecida). Tokens definidos em `globals.css`:
+- Fundo com gradientes ambiente (`--bg-deep` + blobs radiais)
+- Painéis em vidro (`--panel`, `.glass-panel`)
+- Accent principal roxo (`--accent`)
+- Escala de cor de temperatura de leads (`--temp-frio` → `--temp-muito-quente`) — o elemento visual central do produto
+
+## Páginas que ainda faltam
+
+O menu lateral já referencia `/search`, `/leads`, `/priorities` e `/leads/export` — estas páginas ainda não existem (dão 404 por agora). O backend já suporta tudo isto; falta construir as telas.
 
 ## Próximos passos técnicos
 
-- Fluxo de onboarding (tipo de serviço + cidade) após registo.
-- Página de pesquisa de empresas + lista de resultados com scores.
-- Detalhe da empresa + geração de abordagem comercial (IA).
-- CRM (guardar leads, pipeline por status).
+- Página de pesquisa (`/search`) — formulário categoria+cidade, ligado a `POST /api/companies/search`
+- Página de leads (`/leads`) — CRM visual completo (mudar status, notas)
+- Página de priorização (`/priorities`, Pro)
+- Onboarding — capturar `serviceType`/`city` do utilizador após registo
+- Detalhe do lead + geração de conteúdo (script/email/whatsapp/proposta)

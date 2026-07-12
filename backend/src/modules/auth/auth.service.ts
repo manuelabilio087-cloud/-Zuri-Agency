@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 import { prisma } from "@/config/database";
 import { env } from "@/config/env";
+import { PLAN_LIMITS, PlanName } from "@/config/constants";
 
 interface RegisterInput {
   name: string;
@@ -74,12 +75,53 @@ export const authService = {
       throw Object.assign(new Error("Refresh token inválido ou expirado."), { statusCode: 401 });
     }
 
+    const user = await prisma.user.findUnique({ where: { id: stored.userId } });
+    if (!user) {
+      throw Object.assign(new Error("Utilizador não encontrado."), { statusCode: 401 });
+    }
+
     const accessToken = signAccessToken(stored.userId);
-    return { accessToken };
+    return { accessToken, user: sanitizeUser(user) };
   },
 
   async logout(refreshToken: string) {
     await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+  },
+
+  async getMe(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw Object.assign(new Error("Utilizador não encontrado."), { statusCode: 404 });
+    }
+    return sanitizeUser(user);
+  },
+
+  // Uso do mês corrente vs limites do plano — alimenta o widget de uso do dashboard.
+  async getUsage(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw Object.assign(new Error("Utilizador não encontrado."), { statusCode: 404 });
+    }
+
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const counts = await prisma.usageLog.groupBy({
+      by: ["action"],
+      _count: { action: true },
+      where: { userId, createdAt: { gte: startOfMonth } },
+    });
+
+    const used = counts.reduce((acc, row) => ({ ...acc, [row.action]: row._count.action }), {} as Record<string, number>);
+    const limits = PLAN_LIMITS[user.plan as PlanName];
+
+    return {
+      plan: user.plan,
+      searches: { used: used.search ?? 0, limit: limits.searchesPerMonth },
+      analyses: { used: used.analysis ?? 0, limit: limits.analysesPerMonth },
+      aiGenerations: { used: used.ai_generation ?? 0, limit: limits.aiGenerationsPerMonth },
+    };
   },
 };
 

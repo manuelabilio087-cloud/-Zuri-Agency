@@ -22,8 +22,8 @@ Cada pasta tem o seu próprio `README.md` com instruções de setup local e depl
 - ✅ CRM completo (status, notas, follow-ups) + IA de Priorização Diária (Pro)
 - ✅ Exportação: Excel (Starter+) e PDF de propostas (Pro)
 - ✅ Painel administrativo (utilizadores, métricas, MRR)
-- ✅ Landing, registo, login, dashboard (frontend)
-- ⏳ Frontend: páginas de pesquisa/resultado/CRM (à espera de direção visual)
+- ✅ Dashboard principal (frontend) — dados reais, sessão persistente entre reloads
+- ⏳ Frontend: pesquisa, CRM visual, priorização, detalhe do lead
 - ⏳ Billing (Paysuite/Quick-e-Pay) — conta em criação
 
 ## Deploy

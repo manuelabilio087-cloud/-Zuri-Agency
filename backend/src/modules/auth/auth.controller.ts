@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { authService } from "@/modules/auth/auth.service";
+import { AuthenticatedRequest } from "@/modules/auth/auth.middleware";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -51,8 +52,8 @@ export const authController = {
       if (!token) {
         return res.status(401).json({ message: "Sem refresh token." });
       }
-      const { accessToken } = await authService.refresh(token);
-      res.status(200).json({ accessToken });
+      const { accessToken, user } = await authService.refresh(token);
+      res.status(200).json({ accessToken, user });
     } catch (err) {
       next(err);
     }
@@ -66,6 +67,24 @@ export const authController = {
       }
       res.clearCookie("refreshToken");
       res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async me(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const user = await authService.getMe(req.userId!);
+      res.status(200).json({ user });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async usage(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const usage = await authService.getUsage(req.userId!);
+      res.status(200).json(usage);
     } catch (err) {
       next(err);
     }

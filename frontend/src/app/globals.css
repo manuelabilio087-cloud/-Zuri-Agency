@@ -2,6 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-display: var(--font-display), system-ui, sans-serif;
+  --font-body: var(--font-body), system-ui, sans-serif;
+
+  /* Zuri Agency — dashboard escuro, glassmorphism */
+  --bg-deep: #0f0d14;
+  --bg-deep-2: #16121f;
+  --panel: rgba(255, 255, 255, 0.055);
+  --panel-border: rgba(255, 255, 255, 0.09);
+  --text-primary: #f5f3ff;
+  --text-muted: #a79fc2;
+  --accent: #8c6bff;
+  --accent-soft: #8c6bff33;
+
+  /* Temperatura de leads — a escala de cor central do produto */
+  --temp-frio: #5b8def;
+  --temp-morno: #f5b942;
+  --temp-quente: #ff8a4c;
+  --temp-muito-quente: #ff5470;
+}
+
 body {
-  @apply bg-slate-50 text-slate-900;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+}
+
+.bg-ambient {
+  background:
+    radial-gradient(60% 50% at 85% -10%, rgba(140, 107, 255, 0.28), transparent 60%),
+    radial-gradient(50% 40% at 10% 10%, rgba(255, 138, 76, 0.14), transparent 60%),
+    radial-gradient(70% 60% at 50% 120%, rgba(91, 141, 239, 0.16), transparent 60%),
+    var(--bg-deep);
+}
+
+.glass-panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }

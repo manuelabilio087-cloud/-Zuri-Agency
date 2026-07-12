@@ -42,8 +42,10 @@ prisma/
 |---|---|---|
 | POST | `/api/auth/register` | Cria conta (nome, email, password) |
 | POST | `/api/auth/login` | Login (email, password) |
-| POST | `/api/auth/refresh` | Novo access token via cookie de refresh |
+| POST | `/api/auth/refresh` | Novo access token via cookie de refresh (agora também devolve `user`) |
 | POST | `/api/auth/logout` | Termina sessão |
+| GET | `/api/auth/me` | Perfil do utilizador autenticado |
+| GET | `/api/auth/usage` | Uso do mês corrente vs limites do plano (pesquisas, análises, gerações de IA) |
 | POST | `/api/companies/search` | Pesquisa empresas por `category` + `city` (cache 30 dias → Google Places API), dispara análise em background |
 | GET | `/api/companies/:id` | Ficha completa da empresa, com `analysis` (Website Score, SEO Score, Sales Score, Lead Temperature, serviço recomendado) |
 | GET | `/api/companies/:id/analysis-status` | Polling: `{ status: "pending" \| "done", analysis }` |
