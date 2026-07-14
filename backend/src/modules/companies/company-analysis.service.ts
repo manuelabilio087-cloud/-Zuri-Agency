@@ -1,4 +1,4 @@
-import type { Company } from "@prisma/client";
+import type { Company, Prisma } from "@prisma/client";
 import { prisma } from "@/config/database";
 import { websiteAnalyzerService } from "@/modules/companies/website-analyzer.service";
 import { scoringService } from "@/modules/companies/scoring.service";
@@ -16,6 +16,10 @@ export const companyAnalysisService = {
       const technical = websiteResult?.technical ?? null;
 
       const scoring = scoringService.score(company, websiteScore, seoScore, technical);
+      // ScoreBreakdown é uma interface concreta (sem index signature); o campo `Json` do
+      // Prisma exige InputJsonValue, que requer uma index signature. O shape é sempre
+      // serializável (só números e um objeto de pesos), por isso o cast é seguro aqui.
+      const scoreBreakdownJson = scoring.scoreBreakdown as unknown as Prisma.InputJsonValue;
 
       await prisma.companyAnalysis.upsert({
         where: { companyId: company.id },
@@ -26,7 +30,7 @@ export const companyAnalysisService = {
           leadTemperature: scoring.leadTemperature,
           recommendedService: scoring.recommendedService,
           closeProbability: scoring.closeProbability,
-          scoreBreakdown: scoring.scoreBreakdown,
+          scoreBreakdown: scoreBreakdownJson,
           analyzedAt: new Date(),
         },
         create: {
@@ -37,7 +41,7 @@ export const companyAnalysisService = {
           leadTemperature: scoring.leadTemperature,
           recommendedService: scoring.recommendedService,
           closeProbability: scoring.closeProbability,
-          scoreBreakdown: scoring.scoreBreakdown,
+          scoreBreakdown: scoreBreakdownJson,
         },
       });
     } catch (err) {

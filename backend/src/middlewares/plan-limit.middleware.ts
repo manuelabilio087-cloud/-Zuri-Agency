@@ -4,8 +4,9 @@ import { PLAN_LIMITS, PlanName } from "@/config/constants";
 import { AuthenticatedRequest } from "@/modules/auth/auth.middleware";
 
 type UsageAction = "search" | "analysis" | "ai_generation";
+type NumericLimitKey = "searchesPerMonth" | "analysesPerMonth" | "aiGenerationsPerMonth";
 
-const actionToLimitKey: Record<UsageAction, keyof typeof PLAN_LIMITS.FREE> = {
+const actionToLimitKey: Record<UsageAction, NumericLimitKey> = {
   search: "searchesPerMonth",
   analysis: "analysesPerMonth",
   ai_generation: "aiGenerationsPerMonth",
