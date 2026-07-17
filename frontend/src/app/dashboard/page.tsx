@@ -121,8 +121,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Temperatura dos leads (elemento de assinatura) */}
-        <div className="glass-panel rounded-3xl p-6">
-          <p className="mb-4 text-sm text-[var(--text-muted)]">Temperatura dos Leads</p>
+        <div className="glass-panel flex flex-col items-center rounded-3xl p-6 text-center">
+          <p className="mb-4 self-start text-sm text-[var(--text-muted)]">Temperatura dos Leads</p>
           <TemperatureDonut
             frio={temperatureCounts.frio}
             morno={temperatureCounts.morno}

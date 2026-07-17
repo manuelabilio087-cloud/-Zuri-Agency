@@ -25,8 +25,8 @@ export function TemperatureDonut({ frio, morno, quente, muitoQuente }: Temperatu
   let offsetAcc = 0;
 
   return (
-    <div className="flex items-center gap-6">
-      <div className="relative h-[168px] w-[168px] flex-shrink-0">
+    <div className="flex flex-col items-center">
+      <div className="relative h-[152px] w-[152px] flex-shrink-0">
         <svg viewBox="0 0 168 168" className="h-full w-full -rotate-90">
           <circle cx="84" cy="84" r={RADIUS} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={STROKE} />
           {total > 0 &&
@@ -60,11 +60,11 @@ export function TemperatureDonut({ frio, morno, quente, muitoQuente }: Temperatu
         </div>
       </div>
 
-      <div className="space-y-2.5">
+      <div className="mt-5 grid w-full grid-cols-2 gap-x-4 gap-y-2.5">
         {SEGMENTS.map((seg) => (
           <div key={seg.key} className="flex items-center gap-2 text-sm">
             <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ backgroundColor: seg.color }} />
-            <span className="text-[var(--text-muted)]">{seg.label}</span>
+            <span className="truncate text-[var(--text-muted)]">{seg.label}</span>
             <span className="ml-auto tabular-nums font-medium">{values[seg.key]}</span>
           </div>
         ))}
