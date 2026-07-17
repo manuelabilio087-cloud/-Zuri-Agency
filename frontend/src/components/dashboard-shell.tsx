@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutGrid, Search, Users, Flame, Download, LogOut } from "lucide-react";
+import { LayoutGrid, Search, Users, Flame, Download, CreditCard, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/leads", label: "Leads", icon: Users },
   { href: "/priorities", label: "Priorização", icon: Flame, badge: "PRO" },
   { href: "/leads/export", label: "Exportar", icon: Download },
+  { href: "/plan", label: "Plano", icon: CreditCard },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {

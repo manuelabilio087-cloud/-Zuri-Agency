@@ -114,6 +114,14 @@ export default function DashboardPage() {
               <UsageBar label="Pesquisas" used={usage.searches.used} limit={usage.searches.limit} />
               <UsageBar label="Análises" used={usage.analyses.used} limit={usage.analyses.limit} />
               <UsageBar label="Gerações de IA" used={usage.aiGenerations.used} limit={usage.aiGenerations.limit} />
+              {user.plan !== "PRO" && (
+                <Link
+                  href="/plan"
+                  className="block rounded-xl border border-[var(--panel-border)] py-2 text-center text-xs font-medium text-[var(--accent)] hover:bg-white/5"
+                >
+                  Fazer Upgrade
+                </Link>
+              )}
             </div>
           ) : (
             <p className="text-sm text-[var(--text-muted)]">A carregar...</p>
