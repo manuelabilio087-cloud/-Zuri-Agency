@@ -74,6 +74,7 @@ export interface AuthUser {
   name: string;
   email: string;
   plan: Plan;
+  role?: "USER" | "ADMIN";
   serviceType?: string | null;
   city?: string | null;
 }
@@ -148,6 +149,36 @@ export interface PrioritizedLead {
   leadTemperature: LeadTemperature;
   daysSinceContact: number;
   justification: string | null;
+}
+
+export interface AdminUserSummary {
+  id: string;
+  name: string;
+  email: string;
+  plan: Plan;
+  role: "USER" | "ADMIN";
+  createdAt: string;
+  _count: { leads: number };
+}
+
+export interface AdminMetrics {
+  totalUsers: number;
+  planDistribution: Partial<Record<Plan, number>>;
+  mrr: number;
+  usageThisMonth: { searches: number; analyses: number; aiGenerations: number };
+}
+
+export interface AdminUserDetail {
+  id: string;
+  name: string;
+  email: string;
+  plan: Plan;
+  role: "USER" | "ADMIN";
+  serviceType: string | null;
+  city: string | null;
+  createdAt: string;
+  leads: Array<{ id: string; status: LeadStatus; createdAt: string; company: { name: string } }>;
+  usageTotals: { searches: number; analyses: number; aiGenerations: number };
 }
 
 export const api = {
@@ -257,5 +288,17 @@ export const api = {
 
   downloadProposalPdf(token: string, leadId: string, companyName: string) {
     return downloadFile(`/api/leads/${leadId}/export/pdf`, token, `proposta-${companyName}.pdf`);
+  },
+
+  adminListUsers(token: string) {
+    return request<AdminUserSummary[]>("/api/admin/users", { headers: authHeader(token) });
+  },
+
+  adminGetMetrics(token: string) {
+    return request<AdminMetrics>("/api/admin/metrics", { headers: authHeader(token) });
+  },
+
+  adminGetUserDetail(token: string, userId: string) {
+    return request<AdminUserDetail>(`/api/admin/users/${userId}`, { headers: authHeader(token) });
   },
 };

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutGrid, Search, Users, Flame, Download, CreditCard, LogOut } from "lucide-react";
+import { LayoutGrid, Search, Users, Flame, Download, CreditCard, ShieldCheck, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 
@@ -19,6 +19,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, clearSession } = useAuth();
+  const navItems = user?.role === "ADMIN" ? [...NAV_ITEMS, { href: "/admin", label: "Admin", icon: ShieldCheck }] : NAV_ITEMS;
 
   async function handleLogout() {
     await api.logout().catch(() => {});
@@ -39,7 +40,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <nav className="flex-1 space-y-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;
               return (
