@@ -21,7 +21,7 @@ export default function RegisterPage() {
     try {
       const { user, accessToken } = await api.register({ name, email, password });
       setSession(user, accessToken);
-      router.push("/dashboard");
+      router.push("/onboarding");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar conta.");
     } finally {

@@ -172,6 +172,14 @@ export const api = {
     return request<UsageResponse>("/api/auth/usage", { headers: authHeader(token) });
   },
 
+  updateProfile(token: string, input: { serviceType?: string; city?: string }) {
+    return request<{ user: AuthUser }>("/api/auth/me", {
+      method: "PATCH",
+      headers: authHeader(token),
+      body: JSON.stringify(input),
+    });
+  },
+
   listLeads(token: string, params?: { status?: LeadStatus; temperature?: LeadTemperature }) {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);

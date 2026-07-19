@@ -96,6 +96,19 @@ export const authService = {
     return sanitizeUser(user);
   },
 
+  // Onboarding: captura o que o utilizador vende + onde atua, usado depois para
+  // personalizar a geração de conteúdo comercial (ver content-generation.service.ts).
+  async updateProfile(userId: string, input: { serviceType?: string; city?: string }) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(input.serviceType !== undefined ? { serviceType: input.serviceType } : {}),
+        ...(input.city !== undefined ? { city: input.city } : {}),
+      },
+    });
+    return sanitizeUser(user);
+  },
+
   // Uso do mês corrente vs limites do plano — alimenta o widget de uso do dashboard.
   async getUsage(userId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });

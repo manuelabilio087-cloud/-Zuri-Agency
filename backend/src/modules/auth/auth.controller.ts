@@ -14,6 +14,11 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password é obrigatória"),
 });
 
+const updateProfileSchema = z.object({
+  serviceType: z.string().min(2).max(200).optional(),
+  city: z.string().min(2).max(120).optional(),
+});
+
 function setRefreshCookie(res: Response, token: string) {
   res.cookie("refreshToken", token, {
     httpOnly: true,
@@ -75,6 +80,16 @@ export const authController = {
   async me(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const user = await authService.getMe(req.userId!);
+      res.status(200).json({ user });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async updateMe(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const input = updateProfileSchema.parse(req.body);
+      const user = await authService.updateProfile(req.userId!, input);
       res.status(200).json({ user });
     } catch (err) {
       next(err);
