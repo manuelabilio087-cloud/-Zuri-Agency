@@ -15,6 +15,7 @@ const loginSchema = z.object({
 });
 
 const updateProfileSchema = z.object({
+  name: z.string().min(2).max(120).optional(),
   serviceType: z.string().min(2).max(200).optional(),
   city: z.string().min(2).max(120).optional(),
 });

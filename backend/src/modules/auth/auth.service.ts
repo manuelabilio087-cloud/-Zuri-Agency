@@ -96,12 +96,13 @@ export const authService = {
     return sanitizeUser(user);
   },
 
-  // Onboarding: captura o que o utilizador vende + onde atua, usado depois para
-  // personalizar a geração de conteúdo comercial (ver content-generation.service.ts).
-  async updateProfile(userId: string, input: { serviceType?: string; city?: string }) {
+  // Onboarding + edição de perfil: nome, o que o utilizador vende, e onde atua.
+  // Usado depois para personalizar a geração de conteúdo comercial.
+  async updateProfile(userId: string, input: { name?: string; serviceType?: string; city?: string }) {
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
+        ...(input.name !== undefined ? { name: input.name } : {}),
         ...(input.serviceType !== undefined ? { serviceType: input.serviceType } : {}),
         ...(input.city !== undefined ? { city: input.city } : {}),
       },

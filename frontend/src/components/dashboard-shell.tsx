@@ -68,13 +68,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
           {user && (
             <div className="flex items-center gap-3 rounded-xl border border-[var(--panel-border)] bg-white/5 p-3">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--accent)] font-display text-sm font-semibold text-white">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{user.name}</p>
-                <p className="text-xs text-[var(--text-muted)]">Plano {user.plan}</p>
-              </div>
+              <Link href="/settings" className="flex min-w-0 flex-1 items-center gap-3">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--accent)] font-display text-sm font-semibold text-white">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{user.name}</p>
+                  <p className="text-xs text-[var(--text-muted)]">Plano {user.plan}</p>
+                </div>
+              </Link>
               <button
                 onClick={handleLogout}
                 aria-label="Sair"

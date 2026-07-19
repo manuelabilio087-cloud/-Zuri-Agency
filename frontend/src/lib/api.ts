@@ -172,7 +172,7 @@ export const api = {
     return request<UsageResponse>("/api/auth/usage", { headers: authHeader(token) });
   },
 
-  updateProfile(token: string, input: { serviceType?: string; city?: string }) {
+  updateProfile(token: string, input: { name?: string; serviceType?: string; city?: string }) {
     return request<{ user: AuthUser }>("/api/auth/me", {
       method: "PATCH",
       headers: authHeader(token),
