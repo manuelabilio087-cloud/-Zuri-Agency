@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Search, Gauge, Sparkles, Users2, Check, X, Flame } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 const STEPS = [
   {
@@ -63,10 +64,7 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--accent)] font-display text-sm font-bold text-white">
-            Z
-          </div>
-          <span className="font-display text-lg font-semibold">Zuri Agency</span>
+          <Logo />
         </div>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm text-[var(--text-muted)] hover:text-white">

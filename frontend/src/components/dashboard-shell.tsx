@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LayoutGrid, Search, Users, Flame, Download, CreditCard, ShieldCheck, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
+import { Logo } from "@/components/logo";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
@@ -33,10 +34,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {/* Sidebar */}
         <aside className="glass-panel flex h-[calc(100vh-2.5rem)] w-60 flex-shrink-0 flex-col rounded-3xl p-5">
           <div className="mb-8 flex items-center gap-2 px-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--accent)] font-display text-sm font-bold text-white">
-              Z
-            </div>
-            <span className="font-display text-lg font-semibold">Zuri Agency</span>
+            <Logo />
           </div>
 
           <nav className="flex-1 space-y-1">

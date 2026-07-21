@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
+import { Logo } from "@/components/logo";
 
 const SERVICE_SUGGESTIONS = [
   "Criação de Websites",
@@ -54,10 +55,7 @@ export default function OnboardingPage() {
       <form onSubmit={handleSubmit} className="glass-panel w-full max-w-md space-y-5 rounded-3xl p-8">
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--accent)] font-display text-sm font-bold text-white">
-              Z
-            </div>
-            <span className="font-display text-lg font-semibold">Zuri Agency</span>
+            <Logo />
           </div>
           <h1 className="font-display text-xl font-semibold">Só mais duas coisas, {user.name.split(" ")[0]}</h1>
           <p className="mt-1 text-sm text-[var(--text-muted)]">

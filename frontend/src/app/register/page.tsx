@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { Logo } from "@/components/logo";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -33,10 +34,7 @@ export default function RegisterPage() {
     <main className="bg-ambient flex min-h-screen items-center justify-center px-4 text-[var(--text-primary)]">
       <form onSubmit={handleSubmit} className="glass-panel w-full max-w-sm space-y-4 rounded-3xl p-8">
         <div className="mb-2 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--accent)] font-display text-sm font-bold text-white">
-            Z
-          </div>
-          <span className="font-display text-lg font-semibold">Zuri Agency</span>
+          <Logo />
         </div>
         <h1 className="font-display text-xl font-semibold">Criar conta</h1>
 
