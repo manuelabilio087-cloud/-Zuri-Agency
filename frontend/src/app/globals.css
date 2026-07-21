@@ -13,8 +13,8 @@
   --panel-border: rgba(255, 255, 255, 0.09);
   --text-primary: #f5f3ff;
   --text-muted: #a79fc2;
-  --accent: #8c6bff;
-  --accent-soft: #8c6bff33;
+  --accent: #6d4aff;
+  --accent-soft: #6d4aff33;
 
   /* Temperatura de leads — a escala de cor central do produto */
   --temp-frio: #5b8def;
@@ -35,7 +35,7 @@ h1, h2, h3, h4, .font-display {
 
 .bg-ambient {
   background:
-    radial-gradient(60% 50% at 85% -10%, rgba(140, 107, 255, 0.28), transparent 60%),
+    radial-gradient(60% 50% at 85% -10%, rgba(109, 74, 255, 0.28), transparent 60%),
     radial-gradient(50% 40% at 10% 10%, rgba(255, 138, 76, 0.14), transparent 60%),
     radial-gradient(70% 60% at 50% 120%, rgba(91, 141, 239, 0.16), transparent 60%),
     var(--bg-deep);
