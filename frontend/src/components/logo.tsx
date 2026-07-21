@@ -4,9 +4,9 @@ interface LogoProps {
 }
 
 const SIZE_MAP = {
-  sm: { text: "text-lg", dot: "0.16em", dotTop: "-0.02em" },
-  md: { text: "text-xl", dot: "0.15em", dotTop: "-0.02em" },
-  lg: { text: "text-3xl", dot: "0.14em", dotTop: "-0.02em" },
+  sm: { text: "text-lg", dot: "0.24em", dotTop: "-0.03em" },
+  md: { text: "text-xl", dot: "0.22em", dotTop: "-0.03em" },
+  lg: { text: "text-3xl", dot: "0.2em", dotTop: "-0.03em" },
 } as const;
 
 // Wordmark "zuri" com o ponto do "i" substituído por um círculo laranja —
@@ -23,7 +23,7 @@ export function Logo({ size = "md", className = "" }: LogoProps) {
         ı
         <span
           className="absolute left-1/2 -translate-x-1/2 rounded-full bg-[var(--temp-quente)]"
-          style={{ width: dot, height: dot, top: dotTop }}
+          style={{ width: dot, height: dot, top: dotTop, boxShadow: "0 0 8px var(--temp-quente)" }}
         />
       </span>
       <span className="sr-only">i</span>

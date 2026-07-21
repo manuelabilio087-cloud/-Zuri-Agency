@@ -64,7 +64,7 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2">
-          <Logo />
+          <Logo size="lg" />
         </div>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm text-[var(--text-muted)] hover:text-white">
