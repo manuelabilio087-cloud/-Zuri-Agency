@@ -23,18 +23,29 @@ prisma/
 ## Correr localmente
 
 1. `npm install`
-2. Copia `.env.example` para `.env` e preenche `DATABASE_URL` (podes usar um Postgres local ou já a instância do Railway).
+2. Copia `.env.example` para `.env` e preenche `DATABASE_URL`/`DIRECT_URL` (Supabase — ver abaixo) ou um Postgres local.
 3. `npm run prisma:migrate:dev` — cria as tabelas na base de dados.
 4. `npm run dev` — arranca em `http://localhost:4000`.
 
-## Deploy no Railway
+## Base de dados: Supabase (grátis, permanente)
 
-1. Cria um novo projeto no Railway e adiciona um serviço PostgreSQL (Railway gera automaticamente a `DATABASE_URL`).
-2. Adiciona um segundo serviço a partir deste repositório GitHub (`zuri-agency-backend`).
-3. Em **Variables**, define: `JWT_SECRET`, `JWT_REFRESH_SECRET`, `FRONTEND_URL` (o domínio do Vercel), e liga a `DATABASE_URL` do serviço PostgreSQL (Railway permite referenciar variáveis entre serviços).
-4. Define o **Build Command**: `npm run build && npm run prisma:migrate`
-5. Define o **Start Command**: `npm start`
-6. Railway atribui automaticamente `PORT` — o código já lê `process.env.PORT`.
+Usamos o Supabase em vez do Railway Postgres — plano gratuito sem trial a expirar. Como o Supabase liga via *connection pooler* (PgBouncer), o Prisma precisa de **duas** variáveis, não uma:
+
+- `DATABASE_URL` — pooler em modo **transaction** (porta 6543, `?pgbouncer=true`), usado pela app em runtime
+- `DIRECT_URL` — pooler em modo **session** (porta 5432), usado só para migrações (`prisma db push`)
+
+Ambas em **Supabase → Settings → Database → Connect → ORM**, que já dá os dois valores prontos a copiar.
+
+## Deploy no Render (grátis)
+
+1. **render.com** → **New → Web Service** → liga o repositório GitHub
+2. **Root Directory**: `backend`
+3. **Build Command**: `npm install && npm run build && npm run prisma:migrate`
+4. **Start Command**: `npm start`
+5. **Instance Type**: Free
+6. Em **Environment**, define: `DATABASE_URL`, `DIRECT_URL` (Supabase, ver acima), `JWT_SECRET`, `JWT_REFRESH_SECRET`, `FRONTEND_URL` (domínio do Vercel), `GOOGLE_PLACES_API_KEY`, `ANTHROPIC_API_KEY`
+
+**Nota sobre o plano free do Render**: o serviço "adormece" ao fim de 15 min sem pedidos — o primeiro pedido a seguir demora 30-60s a acordar. Aceitável para fase de testes/poucos utilizadores; não ideal para produção com tráfego real.
 
 ## Endpoints disponíveis
 
