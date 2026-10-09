@@ -73,7 +73,23 @@ Ambas em **Supabase → Settings → Database → Connect → ORM**, que já dá
 | GET | `/api/admin/users` | Lista todos os utilizadores (plano, role, nº de leads) — **exclusivo de administradores** |
 | GET | `/api/admin/metrics` | Total de utilizadores, distribuição por plano, uso do mês, MRR — **exclusivo de administradores** |
 | GET | `/api/admin/users/:id` | Detalhe de uso de um utilizador específico — **exclusivo de administradores** |
+| POST | `/api/companies/:id/analyze` | Pede a análise de uma empresa (gasta 1 análise do plano; 403 com `upgradeRequired` no limite) |
+| PATCH | `/api/admin/users/:id` | Muda o `plan` e/ou `role` de um utilizador — **exclusivo de administradores** |
+| GET | `/api/websites` | Sites do utilizador — **exclusivo do plano Pro** |
+| POST | `/api/websites` | Cria um site a partir de um lead (`{ leadId }`); a IA escreve os textos — **Pro** |
+| GET/PATCH/DELETE | `/api/websites/:id` | Lê, edita (conteúdo, tema, endereço, publicar) ou apaga um site — **Pro** |
+| GET/POST | `/api/websites/:id/preview` | HTML do site (POST pré-visualiza um rascunho por guardar) — **Pro** |
+| GET | `/api/websites/:id/download` | Descarrega o site como ficheiro `.html` — **Pro** |
+| GET | `/api/public/sites/:slug` | HTML público de um site publicado (sem login; servido pelo frontend em `/s/:slug`) |
 | GET | `/health` | Health check |
+
+### Análises — quando são gastas
+
+Nos planos com limite (Free, Starter), as análises **não** são gastas nos resultados de pesquisa: só quando o utilizador guarda uma empresa como lead (ou pede a análise no detalhe do lead). No plano Pro (ilimitado), os resultados de pesquisa continuam a ser analisados automaticamente.
+
+### Criador de sites (Pro)
+
+Cada site é conteúdo estruturado (secções em JSON) renderizado por `websites.renderer.ts` num HTML único, sem JavaScript, com todo o texto escapado. Publicado, fica em `https://zuri-agency.vercel.app/s/{slug}` (com cache na CDN da Vercel e uma CSP que bloqueia scripts); também pode ser descarregado como `.html`. Sem `ANTHROPIC_API_KEY`, o site é criado com textos base (editáveis) em vez de textos gerados por IA.
 
 ### Painel administrativo — como promover um utilizador a admin
 

@@ -239,6 +239,43 @@ export interface AdminUserDetail {
   usageTotals: { searches: number; analyses: number; aiGenerations: number };
 }
 
+
+// ---------------------------------------------------------------------------
+// Criador de sites (Pro)
+// ---------------------------------------------------------------------------
+export interface WebsiteContent {
+  seo: { title: string; description: string };
+  hero: { headline: string; subheadline: string; ctaLabel: string; imageUrl: string };
+  about: { title: string; text: string };
+  services: { title: string; items: Array<{ name: string; description: string }> };
+  contact: { phone: string; whatsapp: string; email: string; address: string; hours: string; showMap: boolean };
+  rating: { value: number; count: number } | null;
+}
+
+export interface WebsiteTheme {
+  primary: string;
+  mode: "claro" | "escuro";
+  font: "moderna" | "classica";
+}
+
+export interface WebsiteSummary {
+  id: string;
+  slug: string;
+  businessName: string;
+  published: boolean;
+  publishedAt: string | null;
+  leadId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Website extends WebsiteSummary {
+  content: WebsiteContent;
+  theme: WebsiteTheme;
+  publicUrl: string;
+  usedAi?: boolean;
+}
+
 export const api = {
   register(input: { name: string; email: string; password: string }) {
     return request<AuthResponse>("/api/auth/register", { method: "POST", body: JSON.stringify(input) });
@@ -374,5 +411,50 @@ export const api = {
       headers: authHeader(token),
       body: JSON.stringify(input),
     });
+  },
+
+  listWebsites(token: string) {
+    return request<WebsiteSummary[]>("/api/websites", { headers: authHeader(token) });
+  },
+
+  createWebsite(token: string, leadId: string) {
+    return request<Website>("/api/websites", {
+      method: "POST",
+      headers: authHeader(token),
+      body: JSON.stringify({ leadId }),
+    });
+  },
+
+  getWebsite(token: string, id: string) {
+    return request<Website>(`/api/websites/${id}`, { headers: authHeader(token) });
+  },
+
+  updateWebsite(
+    token: string,
+    id: string,
+    input: Partial<Pick<Website, "businessName" | "slug" | "content" | "theme" | "published">>
+  ) {
+    return request<Website>(`/api/websites/${id}`, {
+      method: "PATCH",
+      headers: authHeader(token),
+      body: JSON.stringify(input),
+    });
+  },
+
+  deleteWebsite(token: string, id: string) {
+    return request<void>(`/api/websites/${id}`, { method: "DELETE", headers: authHeader(token) });
+  },
+
+  // Pré-visualiza o rascunho (sem guardar).
+  previewWebsite(token: string, id: string, draft: Pick<Website, "businessName" | "content" | "theme">) {
+    return request<{ html: string }>(`/api/websites/${id}/preview`, {
+      method: "POST",
+      headers: authHeader(token),
+      body: JSON.stringify(draft),
+    });
+  },
+
+  downloadWebsite(token: string, id: string, slug: string) {
+    return downloadFile(`/api/websites/${id}/download`, token, `${slug}.html`);
   },
 };

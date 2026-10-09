@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Globe, Phone, MapPin, Star, Loader2, FileDown, Sparkles, Copy, Check } from "lucide-react";
+import { ArrowLeft, Globe, Phone, MapPin, Star, Loader2, FileDown, Sparkles, Copy, Check, LayoutTemplate, Lock } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { api, Lead, ContentType, ApiError } from "@/lib/api";
+import { api, Lead, ContentType, ApiError, WebsiteSummary } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { TemperatureBadge } from "@/components/temperature-badge";
 import { StatusSelect } from "@/components/status-select";
@@ -31,6 +31,32 @@ export default function LeadDetailPage() {
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   // Estado da análise quando o lead ainda não a tem: pedida automaticamente ao abrir.
   const [analysisState, setAnalysisState] = useState<"idle" | "pending" | "limit" | "error">("idle");
+  // Site do cliente (criador de sites, plano Pro). undefined = a carregar / não aplicável.
+  const [site, setSite] = useState<WebsiteSummary | null | undefined>(undefined);
+  const [creatingSite, setCreatingSite] = useState(false);
+  const [siteError, setSiteError] = useState<string | null>(null);
+  const isPro = user?.plan === "PRO";
+
+  useEffect(() => {
+    if (!accessToken || !isPro) return;
+    api
+      .listWebsites(accessToken)
+      .then((sites) => setSite(sites.find((s) => s.leadId === id) ?? null))
+      .catch(() => setSite(null));
+  }, [accessToken, isPro, id]);
+
+  async function handleCreateSite() {
+    if (!accessToken || !lead) return;
+    setCreatingSite(true);
+    setSiteError(null);
+    try {
+      const created = await api.createWebsite(accessToken, lead.id);
+      router.push(`/sites/${created.id}`);
+    } catch (err) {
+      setSiteError(err instanceof ApiError ? err.message : "Não foi possível criar o site.");
+      setCreatingSite(false);
+    }
+  }
 
   useEffect(() => {
     if (!isLoading && !user) router.replace("/login");
@@ -247,6 +273,55 @@ export default function LeadDetailPage() {
 
           {/* Coluna lateral */}
           <div className="space-y-4 lg:space-y-5">
+            {/* Site do cliente */}
+            <div className="glass-panel rounded-3xl p-5">
+              <p className="mb-1 flex items-center gap-1.5 text-sm font-medium">
+                <LayoutTemplate size={15} className="text-[var(--accent)]" /> Site do cliente
+              </p>
+              {!isPro ? (
+                <>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Cria o site deste negócio com IA, publica-o num link ou descarrega o HTML.
+                  </p>
+                  <Link
+                    href="/plan"
+                    className="mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-[var(--panel-border)] py-2.5 text-sm hover:bg-white/5"
+                  >
+                    <Lock size={14} /> Disponível no Pro
+                  </Link>
+                </>
+              ) : site === undefined ? (
+                <p className="text-xs text-[var(--text-muted)]">A carregar…</p>
+              ) : site ? (
+                <>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {site.published ? "Publicado" : "Rascunho"} · /s/{site.slug}
+                  </p>
+                  <Link
+                    href={`/sites/${site.id}`}
+                    className="mt-3 block rounded-xl bg-[var(--accent)] py-2.5 text-center text-sm font-medium text-white"
+                  >
+                    Editar site
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    A IA escreve os textos com os dados da empresa. Depois podes editar tudo.
+                  </p>
+                  <button
+                    onClick={handleCreateSite}
+                    disabled={creatingSite}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-2.5 text-sm font-medium text-white disabled:opacity-60"
+                  >
+                    {creatingSite && <Loader2 size={14} className="animate-spin" />}
+                    {creatingSite ? "A criar o site…" : "Criar site"}
+                  </button>
+                  {siteError && <p className="mt-2 text-xs text-[var(--temp-muito-quente)]">{siteError}</p>}
+                </>
+              )}
+            </div>
+
             <div className="glass-panel rounded-3xl p-5">
               <p className="mb-2 text-sm text-[var(--text-muted)]">Status</p>
               <StatusSelect value={lead.status} onChange={handleStatusChange} />

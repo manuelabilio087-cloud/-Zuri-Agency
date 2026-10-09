@@ -1,7 +1,75 @@
+// Tipos da Google Places mais comuns, em português.
+const CATEGORY_PT: Record<string, string> = {
+  restaurant: "restaurante",
+  cafe: "café",
+  coffee_shop: "café",
+  bakery: "padaria",
+  bar: "bar",
+  meal_takeaway: "take-away",
+  fast_food_restaurant: "fast food",
+  pizza_restaurant: "pizzaria",
+  hotel: "hotel",
+  lodging: "alojamento",
+  guest_house: "casa de hóspedes",
+  hospital: "hospital",
+  health: "saúde",
+  medical_clinic: "clínica médica",
+  doctor: "consultório médico",
+  dentist: "clínica dentária",
+  dental_clinic: "clínica dentária",
+  pharmacy: "farmácia",
+  drugstore: "farmácia",
+  beauty_salon: "salão de beleza",
+  hair_salon: "cabeleireiro",
+  hair_care: "cabeleireiro",
+  barber_shop: "barbearia",
+  spa: "spa",
+  nail_salon: "manicure",
+  gym: "ginásio",
+  fitness_center: "ginásio",
+  school: "escola",
+  primary_school: "escola primária",
+  secondary_school: "escola secundária",
+  university: "universidade",
+  car_repair: "oficina",
+  car_dealer: "stand automóvel",
+  car_wash: "lavagem auto",
+  real_estate_agency: "imobiliária",
+  lawyer: "advogados",
+  accounting: "contabilidade",
+  insurance_agency: "seguros",
+  travel_agency: "agência de viagens",
+  supermarket: "supermercado",
+  grocery_store: "mercearia",
+  store: "loja",
+  clothing_store: "loja de roupa",
+  shoe_store: "sapataria",
+  electronics_store: "loja de eletrónica",
+  furniture_store: "loja de mobiliário",
+  hardware_store: "ferragens",
+  jewelry_store: "joalharia",
+  florist: "florista",
+  veterinary_care: "veterinário",
+  pet_store: "loja de animais",
+  church: "igreja",
+  event_venue: "espaço de eventos",
+  wedding_venue: "espaço para casamentos",
+  night_club: "discoteca",
+  photographer: "fotógrafo",
+  electrician: "eletricista",
+  plumber: "canalizador",
+  locksmith: "serralharia",
+  laundry: "lavandaria",
+  bank: "banco",
+  gas_station: "bomba de combustível",
+  tourist_attraction: "atração turística",
+};
+
 // Categorias vêm da Google Places em formato de código (ex: "medical_clinic").
-// Mostra-as legíveis: "Medical clinic".
+// Mostra-as legíveis e em português quando conhecidas: "Clínica médica".
 export function formatCategory(category: string | null | undefined): string {
   if (!category) return "";
-  const text = category.replace(/_/g, " ").trim();
+  const key = category.trim().toLowerCase();
+  const text = CATEGORY_PT[key] ?? category.replace(/_/g, " ").trim();
   return text.charAt(0).toUpperCase() + text.slice(1);
 }

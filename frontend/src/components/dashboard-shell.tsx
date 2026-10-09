@@ -16,6 +16,7 @@ import {
   LogOut,
   MoreHorizontal,
   X,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -41,6 +42,8 @@ const PRIMARY: NavItem[] = [
   { href: "/leads", label: "Leads", icon: Users },
   { href: "/priorities", label: "Prioridades", icon: Flame, badge: "PRO" },
 ];
+
+const CLIENTS: NavItem[] = [{ href: "/sites", label: "Sites", icon: Globe, badge: "PRO" }];
 
 const ACCOUNT: NavItem[] = [
   { href: "/leads/export", label: "Exportar", icon: Download },
@@ -73,6 +76,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const isAdmin = user?.role === "ADMIN";
   const groups: NavGroup[] = [
     { title: "Prospeção", items: PRIMARY },
+    { title: "Clientes", items: CLIENTS },
     { title: "Conta", items: ACCOUNT },
     ...(isAdmin ? [{ title: "Administração", items: ADMIN }] : []),
   ];
