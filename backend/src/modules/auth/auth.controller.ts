@@ -20,11 +20,19 @@ const updateProfileSchema = z.object({
   city: z.string().min(2).max(120).optional(),
 });
 
+// Em produção o frontend (vercel.app) e a API (onrender.com) são sites diferentes,
+// por isso o cookie tem de ser SameSite=None + Secure, senão o browser não o envia
+// nos pedidos fetch e o utilizador é desligado a cada F5.
+const isProd = process.env.NODE_ENV === "production";
+const refreshCookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: (isProd ? "none" : "lax") as "none" | "lax",
+};
+
 function setRefreshCookie(res: Response, token: string) {
   res.cookie("refreshToken", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    ...refreshCookieOptions,
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 }
@@ -71,7 +79,7 @@ export const authController = {
       if (token) {
         await authService.logout(token);
       }
-      res.clearCookie("refreshToken");
+      res.clearCookie("refreshToken", refreshCookieOptions);
       res.status(204).send();
     } catch (err) {
       next(err);

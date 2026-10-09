@@ -5,7 +5,7 @@ Plataforma de inteligência comercial: encontra empresas locais, avalia a sua ma
 Monorepo com dois projetos independentes:
 
 ```
-backend/    Node.js + Express + TypeScript + Prisma + PostgreSQL (deploy: Railway)
+backend/    Node.js + Express + TypeScript + Prisma + PostgreSQL (deploy: Render, BD: Supabase)
 frontend/   Next.js 14 (App Router) + TypeScript + Tailwind (deploy: Vercel)
 ```
 
@@ -28,5 +28,5 @@ Cada pasta tem o seu próprio `README.md` com instruções de setup local e depl
 
 ## Deploy
 
-- **Backend → Railway**: serviço Node + serviço PostgreSQL. Ver `backend/README.md`.
+- **Backend → Render** (Web Service free) com base de dados **Supabase** (Postgres free). Ver `backend/README.md`.
 - **Frontend → Vercel**: importar a subpasta `frontend/` como root directory do projeto Vercel. Ver `frontend/README.md`.

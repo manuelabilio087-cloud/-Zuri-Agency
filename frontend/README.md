@@ -13,7 +13,7 @@ Next.js 14 (App Router) + TypeScript + Tailwind. Já inclui páginas de landing,
 ## Deploy no Vercel
 
 1. Importa o repositório GitHub (`zuri-agency-frontend`) no Vercel.
-2. Em **Environment Variables**, define `NEXT_PUBLIC_API_URL` com o domínio do backend no Railway (ex: `https://zuri-agency-backend-production.up.railway.app`).
+2. Em **Environment Variables**, define `NEXT_PUBLIC_API_URL` com o domínio do backend no Render (ex: `https://zuri-agency-api.onrender.com`).
 3. Vercel deteta Next.js automaticamente — build e deploy são automáticos a cada push.
 4. No backend (Railway), garante que `FRONTEND_URL` aponta para o domínio do Vercel, para o CORS funcionar.
 
