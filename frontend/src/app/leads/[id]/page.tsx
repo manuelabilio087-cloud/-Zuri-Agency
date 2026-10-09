@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Globe, Phone, MapPin, Star, Loader2, FileDown, Sparkles, Copy, Check, LayoutTemplate, Lock } from "lucide-react";
+import { ArrowLeft, Globe, Phone, MapPin, Star, Loader2, FileDown, Sparkles, Copy, Check, LayoutTemplate, Lock, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { api, Lead, ContentType, ApiError, WebsiteSummary } from "@/lib/api";
+import { api, Lead, ContentType, ApiError, WebsiteSummary, SiteStyle } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { SiteStylePicker } from "@/components/site-style-picker";
 import { TemperatureBadge } from "@/components/temperature-badge";
 import { StatusSelect } from "@/components/status-select";
 import { formatCategory } from "@/lib/format";
@@ -35,6 +36,8 @@ export default function LeadDetailPage() {
   const [site, setSite] = useState<WebsiteSummary | null | undefined>(undefined);
   const [creatingSite, setCreatingSite] = useState(false);
   const [siteError, setSiteError] = useState<string | null>(null);
+  const [stylePickerOpen, setStylePickerOpen] = useState(false);
+  const [siteStyle, setSiteStyle] = useState<SiteStyle>("moderno");
   const isPro = user?.plan === "PRO";
 
   useEffect(() => {
@@ -50,7 +53,7 @@ export default function LeadDetailPage() {
     setCreatingSite(true);
     setSiteError(null);
     try {
-      const created = await api.createWebsite(accessToken, lead.id);
+      const created = await api.createWebsite(accessToken, lead.id, siteStyle);
       router.push(`/sites/${created.id}`);
     } catch (err) {
       setSiteError(err instanceof ApiError ? err.message : "Não foi possível criar o site.");
@@ -310,14 +313,14 @@ export default function LeadDetailPage() {
                     A IA escreve os textos com os dados da empresa. Depois podes editar tudo.
                   </p>
                   <button
-                    onClick={handleCreateSite}
-                    disabled={creatingSite}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-2.5 text-sm font-medium text-white disabled:opacity-60"
+                    onClick={() => {
+                      setSiteError(null);
+                      setStylePickerOpen(true);
+                    }}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-2.5 text-sm font-medium text-white"
                   >
-                    {creatingSite && <Loader2 size={14} className="animate-spin" />}
-                    {creatingSite ? "A criar o site…" : "Criar site"}
+                    Criar site
                   </button>
-                  {siteError && <p className="mt-2 text-xs text-[var(--temp-muito-quente)]">{siteError}</p>}
                 </>
               )}
             </div>
@@ -360,6 +363,58 @@ export default function LeadDetailPage() {
                   <p className="text-xs text-[var(--text-muted)]">Sem notas ainda.</p>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {stylePickerOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-6"
+          onClick={() => !creatingSite && setStylePickerOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="style-title"
+        >
+          <div
+            className="thin-scroll max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl border border-[var(--panel-border)] bg-[#0f0d18] p-5 shadow-2xl sm:rounded-3xl sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="style-title" className="font-display text-lg font-bold">
+                  Escolhe o estilo do site
+                </h2>
+                <p className="mt-1 text-sm text-[var(--text-muted)]">
+                  A IA escreve os textos de {lead?.company.name ?? "este negócio"}. Depois podes mudar o estilo, a cor e juntar fotos no editor.
+                </p>
+              </div>
+              <button
+                onClick={() => setStylePickerOpen(false)}
+                disabled={creatingSite}
+                className="rounded-full p-1.5 text-[var(--text-muted)] hover:bg-white/10 hover:text-white"
+                aria-label="Fechar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <SiteStylePicker value={siteStyle} onChange={setSiteStyle} />
+            {siteError && <p className="mt-3 text-sm text-[var(--temp-muito-quente)]">{siteError}</p>}
+            <div className="sticky -bottom-5 -mx-5 mt-5 flex flex-col-reverse gap-2 border-t border-[var(--panel-border)] bg-[#0f0d18] px-5 pb-5 pt-3 sm:static sm:mx-0 sm:flex-row sm:justify-end sm:border-0 sm:p-0">
+              <button
+                onClick={() => setStylePickerOpen(false)}
+                disabled={creatingSite}
+                className="rounded-full border border-[var(--panel-border)] px-5 py-2.5 text-sm hover:bg-white/5 disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateSite}
+                disabled={creatingSite}
+                className="flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white disabled:opacity-60"
+              >
+                {creatingSite && <Loader2 size={14} className="animate-spin" />}
+                {creatingSite ? "A criar o site… (até 30 s)" : "Criar site"}
+              </button>
             </div>
           </div>
         </div>

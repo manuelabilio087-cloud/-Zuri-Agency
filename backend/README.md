@@ -76,7 +76,7 @@ Ambas em **Supabase → Settings → Database → Connect → ORM**, que já dá
 | POST | `/api/companies/:id/analyze` | Pede a análise de uma empresa (gasta 1 análise do plano; 403 com `upgradeRequired` no limite) |
 | PATCH | `/api/admin/users/:id` | Muda o `plan` e/ou `role` de um utilizador — **exclusivo de administradores** |
 | GET | `/api/websites` | Sites do utilizador — **exclusivo do plano Pro** |
-| POST | `/api/websites` | Cria um site a partir de um lead (`{ leadId }`); a IA escreve os textos — **Pro** |
+| POST | `/api/websites` | Cria um site a partir de um lead (`{ leadId, style? }`, `style` = `elegante`\|`moderno`\|`vibrante`); a IA escreve os textos — **Pro** |
 | GET/PATCH/DELETE | `/api/websites/:id` | Lê, edita (conteúdo, tema, endereço, publicar) ou apaga um site — **Pro** |
 | GET/POST | `/api/websites/:id/preview` | HTML do site (POST pré-visualiza um rascunho por guardar) — **Pro** |
 | GET | `/api/websites/:id/download` | Descarrega o site como ficheiro `.html` — **Pro** |
@@ -89,7 +89,13 @@ Nos planos com limite (Free, Starter), as análises **não** são gastas nos res
 
 ### Criador de sites (Pro)
 
-Cada site é conteúdo estruturado (secções em JSON) renderizado por `websites.renderer.ts` num HTML único, sem JavaScript, com todo o texto escapado. Publicado, fica em `https://zuri-agency.vercel.app/s/{slug}` (com cache na CDN da Vercel e uma CSP que bloqueia scripts); também pode ser descarregado como `.html`. Sem `ANTHROPIC_API_KEY`, o site é criado com textos base (editáveis) em vez de textos gerados por IA.
+Cada site é conteúdo estruturado (secções em JSON) renderizado por `websites.renderer.ts` num HTML único e autónomo, com todo o texto escapado. Há **3 estilos** — Elegante, Moderno e Vibrante — escolhidos ao criar o site e alteráveis no editor (com cor principal e fundo claro/escuro).
+
+- **Animações**: entrada palavra a palavra no título, zoom lento na foto de capa com parallax, secções que aparecem ao fazer scroll, cartões com brilho que segue o rato, contadores, barra de progresso, menu de telemóvel e botão de WhatsApp a pulsar. Respeita `prefers-reduced-motion`.
+- **Segurança**: o único JavaScript da página é uma constante do renderer (`SITE_SCRIPT`), autorizada na CSP pelo seu hash (`SITE_SCRIPT_HASH`, enviado no header `X-Site-Script-Hash` e também numa `<meta>` CSP dentro do HTML). O conteúdo do utilizador nunca é código.
+- **Fotos** (logotipo, capa, sobre e uma por serviço): comprimidas no browser e enviadas para o **Vercel Blob** pela rota `/api/uploads` do frontend (valida a sessão no backend e exige Pro). O backend só guarda os links `https://`.
+- **Testemunhos**: só os que o utilizador escreve — a IA nunca os gera.
+- Publicado, fica em `https://zuri-agency.vercel.app/s/{slug}` (cache na CDN da Vercel); também pode ser descarregado como `.html`. Sem `ANTHROPIC_API_KEY`, o site é criado com textos base (editáveis).
 
 ### Painel administrativo — como promover um utilizador a admin
 

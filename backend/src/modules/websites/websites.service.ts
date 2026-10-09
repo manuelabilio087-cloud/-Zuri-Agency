@@ -4,6 +4,8 @@ import { generateSiteContent } from "@/modules/websites/websites.generator";
 import { renderWebsiteHtml } from "@/modules/websites/websites.renderer";
 import {
   SLUG_REGEX,
+  STYLE_DEFAULTS,
+  SiteStyle,
   WebsiteContent,
   WebsiteTheme,
   slugify,
@@ -11,7 +13,7 @@ import {
   websiteThemeSchema,
 } from "@/modules/websites/websites.types";
 
-const DEFAULT_THEME: WebsiteTheme = { primary: "#6d4aff", mode: "claro", font: "moderna" };
+const DEFAULT_THEME: WebsiteTheme = STYLE_DEFAULTS.moderno;
 
 const listSelect = {
   id: true,
@@ -42,13 +44,28 @@ function publicUrl(slug: string): string {
   return `${env.FRONTEND_URL.replace(/\/$/, "")}/s/${slug}`;
 }
 
+function parseTheme(theme: unknown): WebsiteTheme {
+  const result = websiteThemeSchema.safeParse(theme);
+  return result.success ? result.data : DEFAULT_THEME;
+}
+
+// Conteúdo/tema guardados antes de existirem campos novos (fotos, testemunhos, estilo)
+// são completados com os valores por defeito antes de chegarem ao editor.
+function normalize<T extends { slug: string; content: unknown; theme: unknown }>(site: T) {
+  const content = websiteContentSchema.safeParse(site.content);
+  return {
+    ...site,
+    content: content.success ? content.data : site.content,
+    theme: parseTheme(site.theme),
+    publicUrl: publicUrl(site.slug),
+  };
+}
+
 function toRenderInput(site: { businessName: string; slug: string; content: unknown; theme: unknown }) {
-  const content = websiteContentSchema.parse(site.content);
-  const themeResult = websiteThemeSchema.safeParse(site.theme);
   return {
     businessName: site.businessName,
-    content,
-    theme: themeResult.success ? themeResult.data : DEFAULT_THEME,
+    content: websiteContentSchema.parse(site.content),
+    theme: parseTheme(site.theme),
     canonicalUrl: publicUrl(site.slug),
   };
 }
@@ -70,7 +87,7 @@ export const websitesService = {
 
   // Cria um site a partir de um lead: a IA escreve os textos e os contactos/classificação
   // vêm dos dados reais da empresa (Google Places).
-  async createFromLead(userId: string, leadId: string) {
+  async createFromLead(userId: string, leadId: string, style: SiteStyle = "moderno") {
     const lead = await prisma.lead.findFirst({
       where: { id: leadId, userId },
       include: { company: { include: { analysis: true } } },
@@ -96,17 +113,17 @@ export const websitesService = {
         slug: await uniqueSlug(company.name),
         businessName: company.name,
         content: content as never,
-        theme: DEFAULT_THEME as never,
+        theme: (STYLE_DEFAULTS[style] ?? DEFAULT_THEME) as never,
       },
     });
 
-    return { ...site, usedAi, publicUrl: publicUrl(site.slug) };
+    return { ...normalize(site), usedAi };
   },
 
   async get(userId: string, id: string) {
     const site = await prisma.website.findFirst({ where: { id, userId } });
     if (!site) throw notFound();
-    return { ...site, publicUrl: publicUrl(site.slug) };
+    return normalize(site);
   },
 
   async update(userId: string, id: string, input: UpdateWebsiteInput) {
@@ -138,7 +155,7 @@ export const websitesService = {
         ...(publishing ? { publishedAt: new Date() } : {}),
       },
     });
-    return { ...updated, publicUrl: publicUrl(updated.slug) };
+    return normalize(updated);
   },
 
   async remove(userId: string, id: string) {

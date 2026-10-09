@@ -101,18 +101,22 @@ export function fallbackContent(data: SiteSourceData): WebsiteContent {
       ctaLabel: "Falar connosco",
       imageUrl: "",
     },
+    brand: { logoUrl: "", showName: true },
     about: {
       title: `Sobre a ${data.businessName}`.slice(0, 60),
       text: `A ${data.businessName} está em ${data.city} para servir os seus clientes com qualidade e dedicação.\n\nEdite este texto para contar a história do negócio, o que o torna diferente e porque os clientes confiam em si.`,
+      imageUrl: "",
     },
     services: {
       title: "O que oferecemos",
       items: [
-        { name: "Serviço principal", description: "Descreva aqui o serviço mais procurado pelos seus clientes." },
-        { name: "Atendimento personalizado", description: "Explique como acompanha cada cliente do início ao fim." },
-        { name: "Contacto rápido", description: "Fale connosco por telefone ou WhatsApp e responderemos o mais depressa possível." },
+        { name: "Serviço principal", description: "Descreva aqui o serviço mais procurado pelos seus clientes.", imageUrl: "" },
+        { name: "Atendimento personalizado", description: "Explique como acompanha cada cliente do início ao fim.", imageUrl: "" },
+        { name: "Contacto rápido", description: "Fale connosco por telefone ou WhatsApp e responderemos o mais depressa possível.", imageUrl: "" },
       ],
     },
+    // Testemunhos começam vazios: só o utilizador os escreve, com palavras reais de clientes.
+    testimonials: { title: "O que dizem os nossos clientes", items: [] },
     contact: {
       phone: data.phone ?? "",
       whatsapp: data.phone ?? "",
@@ -162,11 +166,11 @@ function clamp(c: WebsiteContent): WebsiteContent {
       ctaLabel: cut(c.hero.ctaLabel, 30) || "Falar connosco",
       imageUrl: "",
     },
-    about: { title: cut(c.about.title, 60), text: cut(c.about.text, 1200) },
+    about: { title: cut(c.about.title, 60), text: cut(c.about.text, 1200), imageUrl: "" },
     services: {
       title: cut(c.services.title, 60),
       items: (Array.isArray(c.services.items) ? c.services.items : [])
-        .map((item) => ({ name: cut(item?.name, 60), description: cut(item?.description, 240) }))
+        .map((item) => ({ name: cut(item?.name, 60), description: cut(item?.description, 240), imageUrl: "" }))
         .filter((item) => item.name),
     },
   };
@@ -198,6 +202,7 @@ export async function generateSiteContent(data: SiteSourceData): Promise<{ conte
     const text = json.content?.find((b) => b.type === "text")?.text ?? "";
     const parsed = JSON.parse(text.replace(/```json|```/g, "").trim()) as Partial<WebsiteContent>;
 
+    // Só os textos vêm da IA; testemunhos, marca e fotos ficam sempre os da base (vazios).
     const candidate = {
       ...base,
       seo: { ...base.seo, ...parsed.seo },

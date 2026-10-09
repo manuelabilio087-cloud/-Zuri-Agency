@@ -19,6 +19,8 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError, Website, WebsiteContent, WebsiteTheme } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { PhotoField } from "@/components/photo-field";
+import { SiteStylePicker } from "@/components/site-style-picker";
 
 const COLOR_PRESETS = ["#6d4aff", "#0f766e", "#2563eb", "#c2410c", "#be123c", "#15803d", "#a16207", "#111827"];
 const DESKTOP_WIDTH = 1280;
@@ -90,6 +92,12 @@ export default function SiteEditorPage() {
 
   function setContent<K extends keyof WebsiteContent>(key: K, value: WebsiteContent[K]) {
     update((d) => ({ ...d, content: { ...d.content, [key]: value } }));
+  }
+
+  // As fotos chegam depois do upload (assíncrono): atualiza a partir do rascunho mais
+  // recente, para não apagar o que foi escrito entretanto.
+  function editContent(mutator: (c: WebsiteContent) => WebsiteContent) {
+    update((d) => ({ ...d, content: mutator(d.content) }));
   }
 
   async function save(extra?: { published?: boolean }) {
@@ -269,6 +277,27 @@ export default function SiteEditorPage() {
             )}
           </Section>
 
+          <Section title="Logotipo" hint="Aparece no menu e no rodapé. Um PNG com fundo transparente fica melhor.">
+            <PhotoField
+              kind="logo"
+              accessToken={accessToken}
+              value={content.brand.logoUrl}
+              emptyLabel="Carregar logotipo"
+              onChange={(url) => editContent((c) => ({ ...c, brand: { ...c.brand, logoUrl: url } }))}
+            />
+            {content.brand.logoUrl && (
+              <label className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                <input
+                  type="checkbox"
+                  checked={content.brand.showName}
+                  onChange={(e) => editContent((c) => ({ ...c, brand: { ...c.brand, showName: e.target.checked } }))}
+                  className="h-4 w-4 accent-[var(--accent)]"
+                />
+                Mostrar o nome ao lado (desliga se o logotipo já tem o nome)
+              </label>
+            )}
+          </Section>
+
           <Section title="Topo do site">
             <Field label="Título principal">
               <Input value={content.hero.headline} onChange={(v) => setContent("hero", { ...content.hero, headline: v })} max={90} />
@@ -284,12 +313,13 @@ export default function SiteEditorPage() {
             <Field label="Texto do botão">
               <Input value={content.hero.ctaLabel} onChange={(v) => setContent("hero", { ...content.hero, ctaLabel: v })} max={30} />
             </Field>
-            <Field label="Imagem de fundo (opcional)" hint="Link https:// de uma foto do negócio.">
-              <Input
+            <Field label="Foto de capa (ecrã inteiro)" hint="Uma foto horizontal do espaço, da equipa ou do trabalho. Sem foto, o topo usa um fundo na cor do site.">
+              <PhotoField
+                kind="capa"
+                accessToken={accessToken}
                 value={content.hero.imageUrl}
-                onChange={(v) => setContent("hero", { ...content.hero, imageUrl: v.trim() })}
-                placeholder="https://…"
-                max={500}
+                emptyLabel="Carregar foto de capa"
+                onChange={(url) => editContent((c) => ({ ...c, hero: { ...c.hero, imageUrl: url } }))}
               />
             </Field>
             {content.rating && (
@@ -311,6 +341,14 @@ export default function SiteEditorPage() {
             </Field>
             <Field label="Texto" hint="Deixa uma linha em branco para separar parágrafos.">
               <TextArea rows={6} value={content.about.text} onChange={(v) => setContent("about", { ...content.about, text: v })} max={1200} />
+            </Field>
+            <Field label="Foto (opcional)" hint="Fica ao lado do texto. Fotos na vertical resultam melhor.">
+              <PhotoField
+                kind="sobre"
+                accessToken={accessToken}
+                value={content.about.imageUrl}
+                onChange={(url) => editContent((c) => ({ ...c, about: { ...c.about, imageUrl: url } }))}
+              />
             </Field>
           </Section>
 
@@ -364,6 +402,22 @@ export default function SiteEditorPage() {
                         })
                       }
                     />
+                    <PhotoField
+                      kind="servico"
+                      layout="row"
+                      accessToken={accessToken}
+                      value={item.imageUrl}
+                      emptyLabel="Adicionar foto"
+                      onChange={(url) =>
+                        editContent((c) => ({
+                          ...c,
+                          services: {
+                            ...c.services,
+                            items: c.services.items.map((it, i) => (i === index ? { ...it, imageUrl: url } : it)),
+                          },
+                        }))
+                      }
+                    />
                   </div>
                 </div>
               ))}
@@ -373,12 +427,85 @@ export default function SiteEditorPage() {
                 onClick={() =>
                   setContent("services", {
                     ...content.services,
-                    items: [...content.services.items, { name: "Novo serviço", description: "" }],
+                    items: [...content.services.items, { name: "Novo serviço", description: "", imageUrl: "" }],
                   })
                 }
                 className="flex items-center gap-1.5 text-sm text-[var(--accent)]"
               >
                 <Plus size={14} /> Adicionar serviço
+              </button>
+            )}
+          </Section>
+
+          <Section
+            title="Testemunhos"
+            hint="Só aparecem no site se escreveres algum. Usa palavras reais de clientes, com autorização — a IA nunca os inventa."
+          >
+            {content.testimonials.items.length > 0 && (
+              <Field label="Título da secção">
+                <Input
+                  value={content.testimonials.title}
+                  placeholder="O que dizem os nossos clientes"
+                  onChange={(v) => setContent("testimonials", { ...content.testimonials, title: v })}
+                  max={60}
+                />
+              </Field>
+            )}
+            <div className="space-y-3">
+              {content.testimonials.items.map((item, index) => {
+                const setItem = (patch: Partial<typeof item>) =>
+                  setContent("testimonials", {
+                    ...content.testimonials,
+                    items: content.testimonials.items.map((it, i) => (i === index ? { ...it, ...patch } : it)),
+                  });
+                return (
+                  <div key={index} className="rounded-2xl border border-[var(--panel-border)] bg-white/[0.03] p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-[var(--text-muted)]">Testemunho {index + 1}</span>
+                      <button
+                        onClick={() =>
+                          setContent("testimonials", {
+                            ...content.testimonials,
+                            items: content.testimonials.items.filter((_, i) => i !== index),
+                          })
+                        }
+                        className="rounded-full p-1 text-[var(--text-muted)] hover:bg-white/10 hover:text-white"
+                        aria-label="Remover testemunho"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      <TextArea
+                        rows={3}
+                        value={item.text}
+                        placeholder="O que o cliente disse…"
+                        max={400}
+                        onChange={(v) => setItem({ text: v })}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input value={item.name} placeholder="Nome do cliente" max={60} onChange={(v) => setItem({ name: v })} />
+                        <Input value={item.role} placeholder="Ex: Cliente (opcional)" max={60} onChange={(v) => setItem({ role: v })} />
+                      </div>
+                      {(!item.name.trim() || !item.text.trim()) && (
+                        <p className="text-[11px] text-[var(--temp-morno)]">Precisa de texto e nome para aparecer no site.</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {content.testimonials.items.length < 6 && (
+              <button
+                onClick={() =>
+                  setContent("testimonials", {
+                    ...content.testimonials,
+                    items: [...content.testimonials.items, { name: "", role: "", text: "" }],
+                  })
+                }
+                className="flex items-center gap-1.5 text-sm text-[var(--accent)]"
+              >
+                <Plus size={14} /> Adicionar testemunho
               </button>
             )}
           </Section>
@@ -419,6 +546,13 @@ export default function SiteEditorPage() {
           </Section>
 
           <Section title="Aparência">
+            <Field label="Estilo">
+              <SiteStylePicker
+                compact
+                value={theme.style}
+                onChange={(style) => update((d) => ({ ...d, theme: { ...d.theme, style } }))}
+              />
+            </Field>
             <Field label="Cor principal">
               <div className="flex flex-wrap items-center gap-2">
                 {COLOR_PRESETS.map((color) => (
@@ -439,28 +573,16 @@ export default function SiteEditorPage() {
                 />
               </div>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Fundo">
-                <Toggle
-                  value={theme.mode}
-                  options={[
-                    { value: "claro", label: "Claro" },
-                    { value: "escuro", label: "Escuro" },
-                  ]}
-                  onChange={(v) => update((d) => ({ ...d, theme: { ...d.theme, mode: v } }))}
-                />
-              </Field>
-              <Field label="Letra">
-                <Toggle
-                  value={theme.font}
-                  options={[
-                    { value: "moderna", label: "Moderna" },
-                    { value: "classica", label: "Clássica" },
-                  ]}
-                  onChange={(v) => update((d) => ({ ...d, theme: { ...d.theme, font: v } }))}
-                />
-              </Field>
-            </div>
+            <Field label="Fundo">
+              <Toggle
+                value={theme.mode}
+                options={[
+                  { value: "claro", label: "Claro" },
+                  { value: "escuro", label: "Escuro" },
+                ]}
+                onChange={(v) => update((d) => ({ ...d, theme: { ...d.theme, mode: v } }))}
+              />
+            </Field>
           </Section>
 
           <Section title="Google (SEO)">
@@ -506,8 +628,22 @@ export default function SiteEditorPage() {
 // a página do site nunca tem acesso à sessão do Zuri Agency.
 function PreviewFrame({ html, device }: { html: string; device: "mobile" | "desktop" }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const scrollRef = useRef(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const [isLargeScreen, setIsLargeScreen] = useState(true);
+
+  // O site avisa onde está o scroll; ao atualizar a pré-visualização, o novo HTML
+  // abre no mesmo ponto (lê-o do nome do iframe) em vez de saltar para o topo.
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== frameRef.current?.contentWindow) return;
+      const y = (event.data as { zuriPreviewScroll?: unknown } | null)?.zuriPreviewScroll;
+      if (typeof y === "number" && Number.isFinite(y) && y >= 0) scrollRef.current = Math.round(y);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -540,7 +676,9 @@ function PreviewFrame({ html, device }: { html: string; device: "mobile" | "desk
       >
         {html ? (
           <iframe
+            ref={frameRef}
             title="Pré-visualização do site"
+            name={`zp:${scrollRef.current}`}
             srcDoc={html}
             sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
             style={{
@@ -561,10 +699,13 @@ function PreviewFrame({ html, device }: { html: string; device: "mobile" | "desk
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
     <div className="glass-panel space-y-3 rounded-3xl p-4 sm:p-5">
-      <p className="text-sm font-semibold">{title}</p>
+      <div>
+        <p className="text-sm font-semibold">{title}</p>
+        {hint && <p className="mt-1 text-xs text-[var(--text-muted)]">{hint}</p>}
+      </div>
       {children}
     </div>
   );

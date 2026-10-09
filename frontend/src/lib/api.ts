@@ -243,20 +243,32 @@ export interface AdminUserDetail {
 // ---------------------------------------------------------------------------
 // Criador de sites (Pro)
 // ---------------------------------------------------------------------------
+export interface WebsiteTestimonial {
+  name: string;
+  role: string;
+  text: string;
+}
+
 export interface WebsiteContent {
   seo: { title: string; description: string };
+  brand: { logoUrl: string; showName: boolean };
   hero: { headline: string; subheadline: string; ctaLabel: string; imageUrl: string };
-  about: { title: string; text: string };
-  services: { title: string; items: Array<{ name: string; description: string }> };
+  about: { title: string; text: string; imageUrl: string };
+  services: { title: string; items: Array<{ name: string; description: string; imageUrl: string }> };
+  testimonials: { title: string; items: WebsiteTestimonial[] };
   contact: { phone: string; whatsapp: string; email: string; address: string; hours: string; showMap: boolean };
   rating: { value: number; count: number } | null;
 }
 
+export type SiteStyle = "elegante" | "moderno" | "vibrante";
+
 export interface WebsiteTheme {
   primary: string;
   mode: "claro" | "escuro";
-  font: "moderna" | "classica";
+  style: SiteStyle;
 }
+
+export type SitePhotoKind = "logo" | "capa" | "sobre" | "servico";
 
 export interface WebsiteSummary {
   id: string;
@@ -417,12 +429,38 @@ export const api = {
     return request<WebsiteSummary[]>("/api/websites", { headers: authHeader(token) });
   },
 
-  createWebsite(token: string, leadId: string) {
+  createWebsite(token: string, leadId: string, style: SiteStyle) {
     return request<Website>("/api/websites", {
       method: "POST",
       headers: authHeader(token),
-      body: JSON.stringify({ leadId }),
+      body: JSON.stringify({ leadId, style }),
     });
+  },
+
+  // Envia uma foto (já comprimida no browser) para o armazenamento do Zuri e devolve o link.
+  // Vai à rota do próprio frontend (/api/uploads), não ao backend.
+  async uploadSitePhoto(token: string, photo: Blob, kind: SitePhotoKind): Promise<string> {
+    const send = (accessToken: string) => {
+      const form = new FormData();
+      form.append("file", photo, `${kind}.${photo.type.split("/")[1] ?? "jpg"}`);
+      form.append("kind", kind);
+      return fetch("/api/uploads", { method: "POST", headers: { Authorization: `Bearer ${accessToken}` }, body: form });
+    };
+    let res = await send(token);
+    if (res.status === 401) {
+      try {
+        const session = await refreshSession();
+        sessionListener.onRefreshed?.(session.user, session.accessToken);
+        res = await send(session.accessToken);
+      } catch {
+        sessionListener.onExpired?.();
+      }
+    }
+    const body = (await res.json().catch(() => ({}))) as ApiErrorBody & { url?: string };
+    if (!res.ok || !body.url) {
+      throw new ApiError(body.message ?? `Erro ${res.status} ao enviar a foto`, res.status, body.upgradeRequired ?? false);
+    }
+    return body.url;
   },
 
   getWebsite(token: string, id: string) {

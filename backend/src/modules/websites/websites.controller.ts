@@ -2,9 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { AuthenticatedRequest } from "@/modules/auth/auth.middleware";
 import { websitesService } from "@/modules/websites/websites.service";
-import { websiteContentSchema, websiteThemeSchema } from "@/modules/websites/websites.types";
+import { SITE_SCRIPT_HASH } from "@/modules/websites/websites.renderer";
+import { SITE_STYLES, websiteContentSchema, websiteThemeSchema } from "@/modules/websites/websites.types";
 
-const createSchema = z.object({ leadId: z.string().uuid() });
+const createSchema = z.object({ leadId: z.string().uuid(), style: z.enum(SITE_STYLES).optional() });
 
 const updateSchema = z.object({
   businessName: z.string().trim().min(1).max(80).optional(),
@@ -31,8 +32,8 @@ export const websitesController = {
 
   async create(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { leadId } = createSchema.parse(req.body);
-      res.status(201).json(await websitesService.createFromLead(req.userId!, leadId));
+      const { leadId, style } = createSchema.parse(req.body);
+      res.status(201).json(await websitesService.createFromLead(req.userId!, leadId, style));
     } catch (err) {
       next(err);
     }
@@ -95,6 +96,8 @@ export const websitesController = {
       if (!html) return res.status(404).json({ message: "Site não encontrado." });
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.setHeader("Cache-Control", "public, max-age=60");
+      // O frontend usa este hash na CSP de /s/{slug} para autorizar só o script do site.
+      res.setHeader("X-Site-Script-Hash", SITE_SCRIPT_HASH);
       res.status(200).send(html);
     } catch (err) {
       next(err);
