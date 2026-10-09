@@ -101,4 +101,24 @@ export const adminService = {
       },
     };
   },
+
+  // PATCH /admin/users/:id — devolve o mesmo formato da listagem.
+  async updateUser(id: string, data: { plan?: PlanName; role?: "USER" | "ADMIN" }) {
+    const exists = await prisma.user.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) return null;
+
+    return prisma.user.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        plan: true,
+        role: true,
+        createdAt: true,
+        _count: { select: { leads: true } },
+      },
+    });
+  },
 };

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, use as usePromise } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Globe, Phone, MapPin, Star, Loader2, FileDown, Sparkles } from "lucide-react";
+import { ArrowLeft, Globe, Phone, MapPin, Star, Loader2, FileDown, Sparkles, Copy, Check } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, Lead, ContentType, ApiError } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
@@ -11,14 +11,15 @@ import { TemperatureBadge } from "@/components/temperature-badge";
 import { StatusSelect } from "@/components/status-select";
 
 const CONTENT_TYPES: { value: ContentType; label: string }[] = [
-  { value: "script", label: "Script de Chamada" },
+  { value: "script", label: "Script de chamada" },
   { value: "email", label: "Email" },
   { value: "whatsapp", label: "WhatsApp" },
-  { value: "proposta", label: "Proposta Comercial" },
+  { value: "proposta", label: "Proposta comercial" },
 ];
 
-export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = usePromise(params);
+export default function LeadDetailPage() {
+  // useParams funciona em Next 14 e 15 (em Next 14 `params` não é uma Promise).
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user, accessToken, isLoading } = useAuth();
 
@@ -88,31 +89,34 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       {!lead ? (
         <p className="text-sm text-[var(--text-muted)]">A carregar...</p>
       ) : (
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid gap-4 lg:grid-cols-3 lg:gap-5">
           {/* Coluna principal */}
-          <div className="col-span-2 space-y-5">
+          <div className="space-y-4 lg:col-span-2 lg:space-y-5">
             {/* Cabeçalho da empresa */}
-            <div className="glass-panel rounded-3xl p-6">
+            <div className="glass-panel rounded-3xl p-5 sm:p-6">
               <div className="mb-4 flex items-start justify-between gap-3">
-                <div>
-                  <h1 className="font-display text-xl font-bold">{lead.company.name}</h1>
+                <div className="min-w-0">
+                  <h1 className="font-display text-xl font-bold sm:text-2xl">{lead.company.name}</h1>
                   <p className="text-sm text-[var(--text-muted)]">{lead.company.category}</p>
                 </div>
                 {lead.company.analysis && <TemperatureBadge temperature={lead.company.analysis.leadTemperature} />}
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-sm text-[var(--text-muted)]">
-                <p className="flex items-center gap-1.5">
-                  <MapPin size={13} /> {lead.company.address || lead.company.city}
+              <div className="grid gap-2 text-sm text-[var(--text-muted)] sm:grid-cols-2">
+                <p className="flex items-start gap-1.5">
+                  <MapPin size={13} className="mt-1 flex-shrink-0" /> {lead.company.address || lead.company.city}
                 </p>
                 {lead.company.phone && (
-                  <p className="flex items-center gap-1.5">
+                  <a href={`tel:${lead.company.phone.replace(/\s/g, "")}`} className="flex items-center gap-1.5 hover:text-white">
                     <Phone size={13} /> {lead.company.phone}
-                  </p>
+                  </a>
                 )}
                 {lead.company.website ? (
-                  <p className="flex items-center gap-1.5 truncate">
-                    <Globe size={13} /> {lead.company.website}
+                  <p className="flex min-w-0 items-center gap-1.5">
+                    <Globe size={13} className="flex-shrink-0" />
+                    <a href={lead.company.website} target="_blank" rel="noopener noreferrer" className="truncate hover:text-white">
+                      {lead.company.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                    </a>
                   </p>
                 ) : (
                   <p className="flex items-center gap-1.5 text-[var(--temp-muito-quente)]">
@@ -129,13 +133,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* Scores da análise */}
             {lead.company.analysis && (
-              <div className="glass-panel rounded-3xl p-6">
-                <p className="mb-4 text-sm text-[var(--text-muted)]">Análise de Maturidade Digital</p>
-                <div className="grid grid-cols-4 gap-3">
-                  <ScoreTile label="Sales Score" value={lead.company.analysis.salesScore} highlight />
+              <div className="glass-panel rounded-3xl p-5 sm:p-6">
+                <p className="mb-4 text-sm text-[var(--text-muted)]">Maturidade digital</p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <ScoreTile label="Sales score" value={lead.company.analysis.salesScore} highlight />
                   <ScoreTile label="Website" value={lead.company.analysis.websiteScore ?? 0} />
                   <ScoreTile label="SEO" value={lead.company.analysis.seoScore ?? 0} />
-                  <ScoreTile label="Fecho" value={lead.company.analysis.closeProbability} suffix="%" />
+                  <ScoreTile label="Prob. de fecho" value={lead.company.analysis.closeProbability} suffix="%" />
                 </div>
                 <div className="mt-4 rounded-xl bg-white/5 p-3">
                   <p className="text-xs text-[var(--text-muted)]">Serviço recomendado</p>
@@ -145,10 +149,10 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             )}
 
             {/* Geração de conteúdo comercial */}
-            <div className="glass-panel rounded-3xl p-6">
-              <div className="mb-4 flex items-center justify-between">
+            <div className="glass-panel rounded-3xl p-5 sm:p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <p className="flex items-center gap-1.5 text-sm text-[var(--text-muted)]">
-                  <Sparkles size={14} /> Gerar Abordagem Comercial
+                  <Sparkles size={14} /> Gerar abordagem comercial
                 </p>
                 {lead.generatedContents?.some((c) => c.type === "proposta") && (
                   <button
@@ -168,7 +172,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     key={ct.value}
                     onClick={() => handleGenerate(ct.value)}
                     disabled={generating !== null || !lead.company.analysis}
-                    className="flex items-center gap-1.5 rounded-full bg-[var(--accent-soft)] px-3.5 py-1.5 text-xs font-medium text-[var(--accent)] transition-opacity hover:opacity-80 disabled:opacity-40"
+                    className="flex items-center gap-1.5 rounded-full bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--accent)] transition-opacity hover:opacity-80 disabled:opacity-40"
                   >
                     {generating === ct.value && <Loader2 size={12} className="animate-spin" />}
                     {ct.label}
@@ -192,7 +196,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Coluna lateral */}
-          <div className="space-y-5">
+          <div className="space-y-4 lg:space-y-5">
             <div className="glass-panel rounded-3xl p-5">
               <p className="mb-2 text-sm text-[var(--text-muted)]">Status</p>
               <StatusSelect value={lead.status} onChange={handleStatusChange} />
@@ -206,12 +210,12 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Adicionar nota..."
                   rows={2}
-                  className="w-full resize-none rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2 text-sm placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+                  className="w-full resize-none rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2 text-base placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none sm:text-sm"
                 />
                 <button
                   onClick={handleAddNote}
                   disabled={!noteText.trim()}
-                  className="w-full rounded-xl bg-[var(--accent)] py-2 text-sm font-medium text-white disabled:opacity-40"
+                  className="w-full rounded-xl bg-[var(--accent)] py-2.5 text-sm font-medium text-white disabled:opacity-40"
                 >
                   Adicionar
                 </button>
@@ -256,13 +260,16 @@ function GeneratedContentCard({ content }: { content: Lead["generatedContents"] 
 
   return (
     <div className="rounded-xl border border-[var(--panel-border)] bg-white/5 p-4">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--accent)]">
           {typeLabels[content.type] ?? content.type}
         </span>
-        <span className="text-[11px] text-[var(--text-muted)]">
-          {new Date(content.createdAt).toLocaleDateString("pt-PT")}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-[var(--text-muted)]">
+            {new Date(content.createdAt).toLocaleDateString("pt-PT")}
+          </span>
+          <CopyButton text={contentToText(content)} />
+        </div>
       </div>
 
       {content.type === "email" && (
@@ -285,5 +292,44 @@ function GeneratedContentCard({ content }: { content: Lead["generatedContents"] 
         <p className="whitespace-pre-line text-sm text-[var(--text-muted)]">{content.content.text}</p>
       )}
     </div>
+  );
+}
+
+function contentToText(content: { type: string; content: Record<string, string> }): string {
+  const c = content.content;
+  if (content.type === "email") return `${c.subject ?? ""}\n\n${c.body ?? ""}`.trim();
+  if (content.type === "proposta") {
+    return [
+      c.diagnostico && `Diagnóstico: ${c.diagnostico}`,
+      c.oportunidade && `Oportunidade: ${c.oportunidade}`,
+      c.solucao && `Solução: ${c.solucao}`,
+      c.proximos_passos && `Próximos passos: ${c.proximos_passos}`,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  }
+  return c.text ?? "";
+}
+
+// Copiar para colar no WhatsApp/email sem selecionar texto à mão (útil no telemóvel).
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard indisponível (ex: http) — ignora
+    }
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      className="flex items-center gap-1 rounded-full border border-[var(--panel-border)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-white"
+    >
+      {copied ? <Check size={12} /> : <Copy size={12} />}
+      {copied ? "Copiado" : "Copiar"}
+    </button>
   );
 }

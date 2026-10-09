@@ -15,10 +15,68 @@ export class ApiError extends Error {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Renovação automática da sessão
+// O access token dura 15 min. Quando um pedido autenticado recebe 401, renovamos
+// o token com o cookie de refresh e repetimos o pedido uma vez — o utilizador
+// nunca vê "Token de acesso inválido ou expirado".
+// ---------------------------------------------------------------------------
+interface SessionListener {
+  onRefreshed?: (user: AuthUser, accessToken: string) => void;
+  onExpired?: () => void;
+}
+
+let sessionListener: SessionListener = {};
+
+export function setSessionListener(listener: SessionListener) {
+  sessionListener = listener;
+}
+
+let refreshInFlight: Promise<AuthResponse> | null = null;
+
+// Partilhada entre pedidos simultâneos: só um pedido de refresh vai ao servidor.
+export function refreshSession(): Promise<AuthResponse> {
+  if (!refreshInFlight) {
+    refreshInFlight = fetch(`${API_URL}/api/auth/refresh`, { method: "POST", credentials: "include" })
+      .then(async (res) => {
+        if (!res.ok) throw new ApiError("Sessão expirada. Entra novamente.", res.status);
+        return (await res.json()) as AuthResponse;
+      })
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
+function hasBearer(headers: HeadersInit | undefined): boolean {
+  if (!headers) return false;
+  if (headers instanceof Headers) return headers.has("Authorization");
+  if (Array.isArray(headers)) return headers.some(([key]) => key.toLowerCase() === "authorization");
+  return Object.keys(headers).some((key) => key.toLowerCase() === "authorization");
+}
+
+async function fetchWithSession(path: string, init: RequestInit): Promise<Response> {
+  const res = await fetch(`${API_URL}${path}`, { ...init, credentials: "include" });
+  if (res.status !== 401 || !hasBearer(init.headers)) return res;
+
+  try {
+    const session = await refreshSession();
+    sessionListener.onRefreshed?.(session.user, session.accessToken);
+    return fetch(`${API_URL}${path}`, {
+      ...init,
+      credentials: "include",
+      headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${session.accessToken}` },
+    });
+  } catch {
+    sessionListener.onExpired?.();
+    return res;
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetchWithSession(path, {
     ...options,
-    credentials: "include", // envia o cookie httpOnly com o refresh token
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
@@ -43,10 +101,7 @@ function authHeader(token: string | null): Record<string, string> {
 
 // Descarrega um ficheiro binário (Excel/PDF) autenticado e força o "Save As" do browser.
 async function downloadFile(path: string, token: string, filename: string): Promise<void> {
-  const res = await fetch(`${API_URL}${path}`, {
-    credentials: "include",
-    headers: authHeader(token),
-  });
+  const res = await fetchWithSession(path, { headers: authHeader(token) });
 
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as ApiErrorBody;
@@ -192,7 +247,7 @@ export const api = {
 
   // Restaura a sessão a partir do cookie httpOnly (usado ao recarregar a página).
   refresh() {
-    return request<AuthResponse>("/api/auth/refresh", { method: "POST" });
+    return refreshSession();
   },
 
   logout() {
@@ -300,5 +355,13 @@ export const api = {
 
   adminGetUserDetail(token: string, userId: string) {
     return request<AdminUserDetail>(`/api/admin/users/${userId}`, { headers: authHeader(token) });
+  },
+
+  adminUpdateUser(token: string, userId: string, input: { plan?: Plan; role?: "USER" | "ADMIN" }) {
+    return request<AdminUserSummary>(`/api/admin/users/${userId}`, {
+      method: "PATCH",
+      headers: authHeader(token),
+      body: JSON.stringify(input),
+    });
   },
 };

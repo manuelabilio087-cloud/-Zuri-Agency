@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --font-display: var(--font-display), system-ui, sans-serif;
-  --font-body: var(--font-body), system-ui, sans-serif;
+  /* As fontes vêm do next/font (layout.tsx), que define --font-display e
+     --font-body no <html>. Não redefinir essas variáveis aqui: uma variável
+     que se referencia a si própria fica inválida e o browser cai em Times. */
 
   /* Zuri Agency — dashboard escuro, glassmorphism */
   --bg-deep: #0f0d14;
@@ -26,11 +27,15 @@
 body {
   background-color: var(--bg-deep);
   color: var(--text-primary);
-  font-family: var(--font-body);
+  font-family: var(--font-body), system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, .font-display {
-  font-family: var(--font-display);
+  font-family: var(--font-display), system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: -0.015em;
 }
 
 .bg-ambient {

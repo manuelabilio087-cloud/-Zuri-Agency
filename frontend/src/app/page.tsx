@@ -62,7 +62,7 @@ export default function HomePage() {
   return (
     <main className="bg-ambient min-h-screen text-[var(--text-primary)]">
       {/* Nav */}
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6 sm:py-6">
         <div className="flex items-center gap-2">
           <Logo size="lg" />
         </div>
@@ -80,7 +80,7 @@ export default function HomePage() {
       </nav>
 
       {/* Hero */}
-      <section className="mx-auto max-w-4xl px-6 pb-20 pt-12 text-center">
+      <section className="mx-auto max-w-4xl px-4 sm:px-6 pb-20 pt-12 text-center">
         <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl">
           Encontra as empresas certas.
           <br />
@@ -103,14 +103,14 @@ export default function HomePage() {
         </div>
 
         {/* Mockup teaser do dashboard */}
-        <div className="glass-panel mx-auto mt-14 max-w-3xl rounded-3xl p-6 text-left">
+        <div className="glass-panel mx-auto mt-10 max-w-3xl rounded-3xl p-4 text-left sm:mt-14 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-[var(--text-muted)]">Temperatura dos Leads</p>
             <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--accent)]">
               Exemplo
             </span>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               { label: "Frio", value: 4, color: "var(--temp-frio)" },
               { label: "Morno", value: 9, color: "var(--temp-morno)" },
@@ -128,7 +128,7 @@ export default function HomePage() {
       </section>
 
       {/* Como funciona */}
-      <section id="como-funciona" className="mx-auto max-w-5xl px-6 py-20">
+      <section id="como-funciona" className="mx-auto max-w-5xl px-4 sm:px-6 py-20">
         <h2 className="font-display text-center text-2xl font-bold sm:text-3xl">Como funciona</h2>
         <p className="mx-auto mt-2 max-w-lg text-center text-sm text-[var(--text-muted)]">
           Do primeiro contacto ao lead fechado, em quatro passos.
@@ -152,7 +152,7 @@ export default function HomePage() {
       </section>
 
       {/* Comparação */}
-      <section className="mx-auto max-w-5xl px-6 py-20">
+      <section className="mx-auto max-w-5xl px-4 sm:px-6 py-20">
         <h2 className="font-display text-center text-2xl font-bold sm:text-3xl">Sem vs. com Zuri Agency</h2>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
@@ -183,7 +183,7 @@ export default function HomePage() {
       </section>
 
       {/* Para quem é */}
-      <section className="mx-auto max-w-5xl px-6 py-20">
+      <section className="mx-auto max-w-5xl px-4 sm:px-6 py-20">
         <h2 className="font-display text-center text-2xl font-bold sm:text-3xl">Feito para quem vende serviços digitais</h2>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-3">
@@ -198,8 +198,8 @@ export default function HomePage() {
       </section>
 
       {/* CTA final */}
-      <section className="mx-auto max-w-3xl px-6 pb-24 pt-4 text-center">
-        <div className="glass-panel rounded-3xl p-10">
+      <section className="mx-auto max-w-3xl px-4 sm:px-6 pb-24 pt-4 text-center">
+        <div className="glass-panel rounded-3xl p-6 sm:p-10">
           <h2 className="font-display text-2xl font-bold">Pronto para encontrar os teus próximos clientes?</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-[var(--text-muted)]">
             Cria uma conta grátis e faz a tua primeira pesquisa em menos de 2 minutos.
@@ -214,7 +214,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="mx-auto max-w-6xl px-6 py-8 text-center text-xs text-[var(--text-muted)]">
+      <footer className="mx-auto max-w-6xl px-4 sm:px-6 py-8 text-center text-xs text-[var(--text-muted)]">
         © {new Date().getFullYear()} Zuri Agency. Todos os direitos reservados.
       </footer>
     </main>

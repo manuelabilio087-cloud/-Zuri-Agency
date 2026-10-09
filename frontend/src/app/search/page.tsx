@@ -6,6 +6,7 @@ import { Search as SearchIcon, Loader2, Star, Globe, Phone, Check } from "lucide
 import { useAuth } from "@/lib/auth-context";
 import { api, Company, ApiError } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { PageHeader } from "@/components/page-header";
 import { TemperatureBadge } from "@/components/temperature-badge";
 
 const POLL_INTERVAL_MS = 4000;
@@ -56,54 +57,51 @@ export default function SearchPage() {
 
   return (
     <DashboardShell>
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold">Pesquisar Empresas</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Encontra empresas locais e vê a maturidade digital de cada uma, calculada automaticamente.
-        </p>
-      </div>
+      <PageHeader
+        title="Pesquisar empresas"
+        description="Encontra empresas locais e vê a maturidade digital de cada uma, calculada automaticamente."
+      />
 
-      <form onSubmit={handleSearch} className="glass-panel mb-6 flex flex-wrap items-end gap-3 rounded-3xl p-5">
-        <div className="min-w-[200px] flex-1">
+      <form
+        onSubmit={handleSearch}
+        className="glass-panel mb-6 grid gap-3 rounded-3xl p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end sm:p-5"
+      >
+        <div>
           <label className="mb-1.5 block text-xs text-[var(--text-muted)]">Categoria</label>
           <input
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             placeholder="Ex: restaurantes, salões de beleza, clínicas"
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-3 text-base text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none sm:py-2.5 sm:text-sm"
             required
           />
         </div>
-        <div className="min-w-[160px] flex-1">
+        <div>
           <label className="mb-1.5 block text-xs text-[var(--text-muted)]">Cidade</label>
           <input
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="Ex: Maputo"
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-3 text-base text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none sm:py-2.5 sm:text-sm"
             required
           />
         </div>
         <button
           type="submit"
           disabled={searching}
-          className="flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:py-2.5"
         >
           {searching ? <Loader2 size={16} className="animate-spin" /> : <SearchIcon size={16} />}
-          Pesquisar
+          {searching ? "A pesquisar…" : "Pesquisar"}
         </button>
       </form>
 
-      {error && (
-        <div className="glass-panel mb-6 rounded-2xl border-[var(--temp-muito-quente)]/30 p-4 text-sm text-[var(--temp-muito-quente)]">
-          {error}
-        </div>
-      )}
+      {error && <SearchError message={error} />}
 
       {companies !== null && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
           {companies.length === 0 ? (
-            <p className="col-span-2 py-8 text-center text-sm text-[var(--text-muted)]">
+            <p className="col-span-full py-8 text-center text-sm text-[var(--text-muted)]">
               Nenhuma empresa encontrada para esta categoria/cidade.
             </p>
           ) : (
@@ -158,7 +156,7 @@ function CompanyResultCard({
   }, [company.analysis, company.id, accessToken]);
 
   return (
-    <div className="glass-panel rounded-2xl p-5">
+    <div className="glass-panel flex flex-col rounded-2xl p-4 sm:p-5">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="truncate font-medium">{company.name}</h3>
@@ -176,13 +174,16 @@ function CompanyResultCard({
 
       <div className="mb-3 space-y-1 text-xs text-[var(--text-muted)]">
         {company.phone && (
-          <p className="flex items-center gap-1.5">
+          <a href={`tel:${company.phone.replace(/\s/g, "")}`} className="flex items-center gap-1.5 hover:text-white">
             <Phone size={12} /> {company.phone}
-          </p>
+          </a>
         )}
         {company.website ? (
-          <p className="flex items-center gap-1.5 truncate">
-            <Globe size={12} /> {company.website}
+          <p className="flex min-w-0 items-center gap-1.5">
+            <Globe size={12} className="flex-shrink-0" />
+            <a href={company.website} target="_blank" rel="noopener noreferrer" className="truncate hover:text-white">
+              {company.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+            </a>
           </p>
         ) : (
           <p className="flex items-center gap-1.5 text-[var(--temp-muito-quente)]">
@@ -199,7 +200,7 @@ function CompanyResultCard({
       {company.analysis && (
         <div className="mb-3 flex items-center gap-4 rounded-xl bg-white/5 p-3 text-xs">
           <div>
-            <p className="text-[var(--text-muted)]">Sales Score</p>
+            <p className="text-[var(--text-muted)]">Sales score</p>
             <p className="font-display text-lg font-bold tabular-nums">{company.analysis.salesScore}</p>
           </div>
           <div className="min-w-0 flex-1">
@@ -212,16 +213,36 @@ function CompanyResultCard({
       <button
         onClick={onSave}
         disabled={saved}
-        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[var(--panel-border)] py-2 text-sm font-medium transition-colors hover:bg-white/5 disabled:cursor-default disabled:border-transparent disabled:bg-[var(--accent-soft)] disabled:text-[var(--accent)]"
+        className="mt-auto flex w-full items-center justify-center gap-1.5 rounded-xl border border-[var(--panel-border)] py-2.5 text-sm font-medium transition-colors hover:bg-white/5 disabled:cursor-default disabled:border-transparent disabled:bg-[var(--accent-soft)] disabled:text-[var(--accent)]"
       >
         {saved ? (
           <>
-            <Check size={14} /> Guardado como Lead
+            <Check size={14} /> Guardado nos leads
           </>
         ) : (
-          "Guardar como Lead"
+          "Guardar como lead"
         )}
       </button>
+    </div>
+  );
+}
+
+// Erros técnicos da Google (JSON em bruto) ficam escondidos atrás de "Detalhes técnicos".
+function SearchError({ message }: { message: string }) {
+  const isProviderError = message.startsWith("Google Places API");
+  return (
+    <div className="glass-panel mb-6 rounded-2xl border-[var(--temp-muito-quente)]/30 p-4 text-sm">
+      <p className="text-[var(--temp-muito-quente)]">
+        {isProviderError
+          ? "A pesquisa de empresas está indisponível de momento. Tenta novamente daqui a pouco."
+          : message}
+      </p>
+      {isProviderError && (
+        <details className="mt-2 text-xs text-[var(--text-muted)]">
+          <summary className="cursor-pointer select-none">Detalhes técnicos</summary>
+          <p className="mt-2 break-words font-mono">{message}</p>
+        </details>
+      )}
     </div>
   );
 }

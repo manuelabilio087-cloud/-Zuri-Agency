@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { AuthUser, api } from "@/lib/api";
+import { AuthUser, api, setSessionListener } from "@/lib/api";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -20,6 +20,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Ao carregar/recarregar a página, tenta restaurar a sessão a partir do
   // cookie httpOnly de refresh — sem isto, um F5 no dashboard "desligava" o utilizador.
+  // Quando o access token expira a meio da sessão, o cliente da API renova-o
+  // sozinho e avisa aqui; se o refresh falhar, a sessão termina e as páginas
+  // protegidas mandam para o login.
+  useEffect(() => {
+    setSessionListener({
+      onRefreshed: (nextUser, nextToken) => {
+        setUser(nextUser);
+        setAccessToken(nextToken);
+      },
+      onExpired: () => {
+        setUser(null);
+        setAccessToken(null);
+      },
+    });
+    return () => setSessionListener({});
+  }, []);
+
   useEffect(() => {
     api
       .refresh()

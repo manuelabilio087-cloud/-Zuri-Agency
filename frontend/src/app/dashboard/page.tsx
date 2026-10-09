@@ -7,6 +7,7 @@ import { Plus, ArrowUpRight, Clock } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, Lead, UsageResponse } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { PageHeader } from "@/components/page-header";
 import { TemperatureDonut } from "@/components/temperature-donut";
 import { UsageBar } from "@/components/usage-bar";
 
@@ -60,30 +61,27 @@ export default function DashboardPage() {
 
   return (
     <DashboardShell>
-      {/* Header */}
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Olá, {user.name.split(" ")[0]} 👋</h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
-            Bem-vindo de volta. Aqui está o resumo da tua atividade comercial.
-          </p>
-        </div>
-        <Link
-          href="/search"
-          className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
-        >
-          <Plus size={16} />
-          Nova Pesquisa
-        </Link>
-      </div>
+      <PageHeader
+        title={`Olá, ${user.name.split(" ")[0]} 👋`}
+        description="Aqui está o resumo da tua atividade comercial."
+        actions={
+          <Link
+            href="/search"
+            className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+          >
+            <Plus size={16} />
+            Nova pesquisa
+          </Link>
+        }
+      />
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-5">
         {/* Total de leads */}
-        <div className="glass-panel col-span-2 rounded-3xl p-6">
-          <p className="text-sm text-[var(--text-muted)]">Total de Leads Guardados</p>
+        <div className="glass-panel rounded-3xl p-5 sm:p-6 md:col-span-2">
+          <p className="text-sm text-[var(--text-muted)]">Leads guardados</p>
           <p className="font-display mt-1 text-4xl font-bold tabular-nums">{leads?.length ?? "—"}</p>
 
-          <div className="mt-6 grid grid-cols-4 gap-3">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {(["frio", "morno", "quente", "muito_quente"] as const).map((temp) => {
               const key = temp === "muito_quente" ? "muitoQuente" : temp;
               const count = temperatureCounts[key as keyof typeof temperatureCounts];
@@ -102,9 +100,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Uso do plano */}
-        <div className="glass-panel rounded-3xl p-6">
+        <div className="glass-panel rounded-3xl p-5 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-[var(--text-muted)]">Uso do Plano</p>
+            <p className="text-sm text-[var(--text-muted)]">Uso do plano</p>
             <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--accent)]">
               {user.plan}
             </span>
@@ -119,7 +117,7 @@ export default function DashboardPage() {
                   href="/plan"
                   className="block rounded-xl border border-[var(--panel-border)] py-2 text-center text-xs font-medium text-[var(--accent)] hover:bg-white/5"
                 >
-                  Fazer Upgrade
+                  Fazer upgrade
                 </Link>
               )}
             </div>
@@ -129,8 +127,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Temperatura dos leads (elemento de assinatura) */}
-        <div className="glass-panel flex flex-col items-center rounded-3xl p-6 text-center">
-          <p className="mb-4 self-start text-sm text-[var(--text-muted)]">Temperatura dos Leads</p>
+        <div className="glass-panel flex flex-col items-center rounded-3xl p-5 text-center sm:p-6">
+          <p className="mb-4 self-start text-sm text-[var(--text-muted)]">Temperatura dos leads</p>
           <TemperatureDonut
             frio={temperatureCounts.frio}
             morno={temperatureCounts.morno}
@@ -140,9 +138,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Leads recentes */}
-        <div className="glass-panel rounded-3xl p-6">
+        <div className="glass-panel rounded-3xl p-5 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-[var(--text-muted)]">Leads Recentes</p>
+            <p className="text-sm text-[var(--text-muted)]">Leads recentes</p>
             <Link href="/leads" className="flex items-center gap-1 text-xs text-[var(--accent)]">
               Ver todos <ArrowUpRight size={12} />
             </Link>
@@ -153,7 +151,11 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-3">
               {recentLeads.map((lead) => (
-                <div key={lead.id} className="flex items-center gap-3">
+                <Link
+                  key={lead.id}
+                  href={`/leads/${lead.id}`}
+                  className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-1.5 transition-colors hover:bg-white/5"
+                >
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/5 text-xs font-semibold">
                     {lead.company.name.charAt(0).toUpperCase()}
                   </div>
@@ -164,16 +166,16 @@ export default function DashboardPage() {
                   {lead.company.analysis && (
                     <span className="tabular-nums text-sm font-semibold">{lead.company.analysis.salesScore}</span>
                   )}
-                </div>
+                </Link>
               ))}
             </div>
           )}
         </div>
 
         {/* Follow-ups pendentes */}
-        <div className="glass-panel rounded-3xl p-6">
+        <div className="glass-panel rounded-3xl p-5 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-[var(--text-muted)]">Follow-ups Pendentes</p>
+            <p className="text-sm text-[var(--text-muted)]">Follow-ups pendentes</p>
             <Clock size={14} className="text-[var(--text-muted)]" />
           </div>
 
@@ -184,12 +186,16 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-3">
               {followUps.slice(0, 5).map((lead) => (
-                <div key={lead.id} className="flex items-center justify-between text-sm">
+                <Link
+                  key={lead.id}
+                  href={`/leads/${lead.id}`}
+                  className="-mx-2 flex items-center justify-between gap-3 rounded-xl px-2 py-1.5 text-sm transition-colors hover:bg-white/5"
+                >
                   <span className="truncate">{lead.company.name}</span>
                   <span className="flex-shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-xs text-[var(--text-muted)]">
                     7+ dias
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           )}

@@ -10,3 +10,4 @@ adminRoutes.use(requireAuth, requireAdmin);
 adminRoutes.get("/users", adminController.listUsers);
 adminRoutes.get("/metrics", adminController.getMetrics);
 adminRoutes.get("/users/:id", adminController.getUserDetail);
+adminRoutes.patch("/users/:id", adminController.updateUser);

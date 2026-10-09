@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { PageHeader } from "@/components/page-header";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -52,18 +53,15 @@ export default function SettingsPage() {
 
   return (
     <DashboardShell>
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold">Definições</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">Gere os dados do teu perfil.</p>
-      </div>
+      <PageHeader title="Definições" description="Gere os dados do teu perfil." />
 
-      <form onSubmit={handleSubmit} className="glass-panel max-w-lg space-y-4 rounded-3xl p-6">
+      <form onSubmit={handleSubmit} className="glass-panel max-w-lg space-y-4 rounded-3xl p-5 sm:p-6">
         <div className="space-y-1">
           <label className="text-sm text-[var(--text-muted)]">Nome</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2.5 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-3 text-base sm:py-2.5 sm:text-sm text-white focus:border-[var(--accent)] focus:outline-none"
             required
           />
         </div>
@@ -73,7 +71,7 @@ export default function SettingsPage() {
           <input
             value={user.email}
             disabled
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/[0.02] px-3 py-2.5 text-sm text-[var(--text-muted)]"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/[0.02] px-3 py-3 text-base sm:py-2.5 sm:text-sm text-[var(--text-muted)]"
           />
           <p className="text-xs text-[var(--text-muted)]">O email não pode ser alterado por agora.</p>
         </div>
@@ -84,7 +82,7 @@ export default function SettingsPage() {
             value={serviceType}
             onChange={(e) => setServiceType(e.target.value)}
             placeholder="Ex: Criação de Websites"
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-3 text-base sm:py-2.5 sm:text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
           />
         </div>
 
@@ -94,7 +92,7 @@ export default function SettingsPage() {
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="Ex: Maputo"
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-3 text-base sm:py-2.5 sm:text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
           />
         </div>
 
@@ -103,7 +101,7 @@ export default function SettingsPage() {
         <button
           type="submit"
           disabled={saving}
-          className="flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-3 text-sm sm:w-auto sm:py-2.5 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {saved && <Check size={15} />}
           {saving ? "A guardar..." : saved ? "Guardado" : "Guardar alterações"}

@@ -3,10 +3,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { Plus, ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, Lead, LeadStatus } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { PageHeader } from "@/components/page-header";
 import { TemperatureBadge } from "@/components/temperature-badge";
 import { StatusSelect } from "@/components/status-select";
 
@@ -49,14 +50,21 @@ export default function LeadsPage() {
 
   return (
     <DashboardShell>
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold">Leads</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Gere o teu pipeline: acompanha o status de cada empresa que guardaste.
-        </p>
-      </div>
+      <PageHeader
+        title="Leads"
+        description="Acompanha o estado de cada empresa que guardaste."
+        actions={
+          <Link
+            href="/search"
+            className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+          >
+            <Plus size={16} />
+            Nova pesquisa
+          </Link>
+        }
+      />
 
-      <div className="mb-5 flex gap-2 overflow-x-auto">
+      <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
         {STATUS_TABS.map((tab) => (
           <button
             key={tab.value}
@@ -72,7 +80,7 @@ export default function LeadsPage() {
         ))}
       </div>
 
-      <div className="glass-panel rounded-3xl p-2">
+      <div className="glass-panel rounded-3xl p-1 sm:p-2">
         {leads === null ? (
           <p className="p-6 text-sm text-[var(--text-muted)]">A carregar...</p>
         ) : leads.length === 0 ? (
@@ -85,33 +93,35 @@ export default function LeadsPage() {
         ) : (
           <div className="divide-y divide-[var(--panel-border)]">
             {leads.map((lead) => (
-              <div key={lead.id} className="flex items-center gap-4 p-4">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/5 text-sm font-semibold">
-                  {lead.company.name.charAt(0).toUpperCase()}
+              <div key={lead.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4">
+                <Link href={`/leads/${lead.id}`} className="group flex min-w-0 flex-1 items-center gap-3">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/5 text-sm font-semibold">
+                    {lead.company.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-1.5 font-medium group-hover:underline">
+                      <span className="truncate">{lead.company.name}</span>
+                      <ArrowUpRight size={13} className="flex-shrink-0 text-[var(--text-muted)]" />
+                    </p>
+                    <p className="truncate text-xs text-[var(--text-muted)]">
+                      {lead.company.category} · {lead.company.city}
+                    </p>
+                  </div>
+                </Link>
+
+                <div className="flex items-center justify-between gap-3 pl-[52px] sm:justify-end sm:pl-0">
+                  {lead.company.analysis ? (
+                    <div className="flex items-center gap-3">
+                      <TemperatureBadge temperature={lead.company.analysis.leadTemperature} />
+                      <span className="w-8 text-right tabular-nums text-sm font-semibold" title="Sales score">
+                        {lead.company.analysis.salesScore}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-[var(--text-muted)]">A analisar…</span>
+                  )}
+                  <StatusSelect value={lead.status} onChange={(status) => handleStatusChange(lead.id, status)} />
                 </div>
-
-                <div className="min-w-0 flex-1">
-                  <Link href={`/leads/${lead.id}`} className="flex items-center gap-1.5 truncate font-medium hover:underline">
-                    {lead.company.name}
-                    <ArrowUpRight size={13} className="text-[var(--text-muted)]" />
-                  </Link>
-                  <p className="truncate text-xs text-[var(--text-muted)]">
-                    {lead.company.category} · {lead.company.city}
-                  </p>
-                </div>
-
-                {lead.company.analysis ? (
-                  <>
-                    <TemperatureBadge temperature={lead.company.analysis.leadTemperature} />
-                    <span className="hidden w-14 flex-shrink-0 text-right tabular-nums text-sm font-semibold sm:block">
-                      {lead.company.analysis.salesScore}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs text-[var(--text-muted)]">A analisar...</span>
-                )}
-
-                <StatusSelect value={lead.status} onChange={(status) => handleStatusChange(lead.id, status)} />
               </div>
             ))}
           </div>

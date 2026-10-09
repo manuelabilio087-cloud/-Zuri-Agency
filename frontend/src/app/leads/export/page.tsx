@@ -6,6 +6,7 @@ import { FileSpreadsheet, Loader2, Lock } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { PageHeader } from "@/components/page-header";
 
 export default function ExportPage() {
   const router = useRouter();
@@ -38,20 +39,15 @@ export default function ExportPage() {
 
   return (
     <DashboardShell>
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold">Exportar</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Descarrega os teus leads para partilhar ou analisar fora da plataforma.
-        </p>
-      </div>
+      <PageHeader title="Exportar" description="Descarrega os teus leads para partilhar ou analisar fora da plataforma." />
 
-      <div className="glass-panel max-w-md rounded-3xl p-6">
+      <div className="glass-panel max-w-md rounded-3xl p-5 sm:p-6">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
             <FileSpreadsheet size={20} />
           </div>
           <div>
-            <p className="font-medium">Excel — Todos os Leads</p>
+            <p className="font-medium">Excel — todos os leads</p>
             <p className="text-xs text-[var(--text-muted)]">Empresa, contacto, scores, status</p>
           </div>
         </div>

@@ -52,7 +52,7 @@ export default function OnboardingPage() {
 
   return (
     <main className="bg-ambient flex min-h-screen items-center justify-center px-4 text-[var(--text-primary)]">
-      <form onSubmit={handleSubmit} className="glass-panel w-full max-w-md space-y-5 rounded-3xl p-8">
+      <form onSubmit={handleSubmit} className="glass-panel w-full max-w-md space-y-5 rounded-3xl p-6 sm:p-8">
         <div>
           <div className="mb-2 flex items-center gap-2">
             <Logo />
@@ -69,7 +69,7 @@ export default function OnboardingPage() {
             value={serviceType}
             onChange={(e) => setServiceType(e.target.value)}
             placeholder="Ex: Criação de Websites"
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-3 text-base sm:py-2.5 sm:text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
           />
           <div className="flex flex-wrap gap-2 pt-1">
             {SERVICE_SUGGESTIONS.map((suggestion) => (
@@ -91,7 +91,7 @@ export default function OnboardingPage() {
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="Ex: Maputo"
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-3 text-base sm:py-2.5 sm:text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
           />
         </div>
 

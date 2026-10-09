@@ -6,6 +6,7 @@ import { Check, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Plan } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { PageHeader } from "@/components/page-header";
 
 interface PlanTier {
   id: Plan;
@@ -80,20 +81,18 @@ export default function PlanPage() {
 
   return (
     <DashboardShell>
-      <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold">Plano</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Escolhe o plano certo para o volume de leads que precisas de gerir.
-        </p>
-      </div>
+      <PageHeader
+        title="Plano"
+        description="Escolhe o plano certo para o volume de leads que precisas de gerir."
+      />
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid gap-5 pt-3 md:grid-cols-3">
         {TIERS.map((tier) => {
           const isCurrent = user.plan === tier.id;
           return (
             <div
               key={tier.id}
-              className={`relative flex flex-col rounded-3xl p-6 ${
+              className={`relative flex flex-col !overflow-visible rounded-3xl p-5 sm:p-6 ${
                 tier.highlighted
                   ? "glass-panel border-[var(--accent)]/50 shadow-[0_0_40px_-12px_var(--accent)]"
                   : "glass-panel"
@@ -125,7 +124,7 @@ export default function PlanPage() {
               <div className="mt-6">
                 {isCurrent ? (
                   <div className="rounded-xl border border-[var(--panel-border)] py-2.5 text-center text-sm font-medium text-[var(--text-muted)]">
-                    Plano Atual
+                    Plano atual
                   </div>
                 ) : (
                   <button
@@ -136,7 +135,7 @@ export default function PlanPage() {
                         : "border border-[var(--panel-border)] hover:bg-white/5"
                     }`}
                   >
-                    {tier.id === "FREE" ? "Voltar ao Free" : "Fazer Upgrade"}
+                    {tier.id === "FREE" ? "Voltar ao Free" : "Fazer upgrade"}
                   </button>
                 )}
               </div>

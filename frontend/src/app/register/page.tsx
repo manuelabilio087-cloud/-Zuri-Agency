@@ -32,7 +32,7 @@ export default function RegisterPage() {
 
   return (
     <main className="bg-ambient flex min-h-screen items-center justify-center px-4 text-[var(--text-primary)]">
-      <form onSubmit={handleSubmit} className="glass-panel w-full max-w-sm space-y-4 rounded-3xl p-8">
+      <form onSubmit={handleSubmit} className="glass-panel w-full max-w-sm space-y-4 rounded-3xl p-6 sm:p-8">
         <div className="mb-2 flex items-center gap-2">
           <Logo />
         </div>
@@ -41,7 +41,7 @@ export default function RegisterPage() {
         <div className="space-y-1">
           <label className="text-sm text-[var(--text-muted)]">Nome</label>
           <input
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-3 text-base sm:py-2.5 sm:text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -52,7 +52,7 @@ export default function RegisterPage() {
           <label className="text-sm text-[var(--text-muted)]">Email</label>
           <input
             type="email"
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-3 text-base sm:py-2.5 sm:text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -63,7 +63,7 @@ export default function RegisterPage() {
           <label className="text-sm text-[var(--text-muted)]">Password</label>
           <input
             type="password"
-            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 px-3 py-3 text-base sm:py-2.5 sm:text-sm text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             minLength={6}
@@ -76,7 +76,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-[var(--accent)] px-3 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-xl bg-[var(--accent)] px-3 py-3 text-base sm:py-2.5 sm:text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {loading ? "A criar conta..." : "Criar conta"}
         </button>
