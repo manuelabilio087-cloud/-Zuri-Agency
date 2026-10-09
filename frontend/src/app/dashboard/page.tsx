@@ -10,12 +10,13 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { PageHeader } from "@/components/page-header";
 import { TemperatureDonut } from "@/components/temperature-donut";
 import { UsageBar } from "@/components/usage-bar";
+import { formatCategory } from "@/lib/format";
 
 const TEMPERATURE_LABELS: Record<string, string> = {
   frio: "Frio",
   morno: "Morno",
   quente: "Quente",
-  muito_quente: "Muito Quente",
+  muito_quente: "Muito quente",
 };
 
 const TEMPERATURE_COLORS: Record<string, string> = {
@@ -161,7 +162,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{lead.company.name}</p>
-                    <p className="truncate text-xs text-[var(--text-muted)]">{lead.company.category}</p>
+                    <p className="truncate text-xs text-[var(--text-muted)]">{formatCategory(lead.company.category)}</p>
                   </div>
                   {lead.company.analysis && (
                     <span className="tabular-nums text-sm font-semibold">{lead.company.analysis.salesScore}</span>

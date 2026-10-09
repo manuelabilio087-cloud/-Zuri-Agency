@@ -9,6 +9,7 @@ import { api, Lead, ContentType, ApiError } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { TemperatureBadge } from "@/components/temperature-badge";
 import { StatusSelect } from "@/components/status-select";
+import { formatCategory } from "@/lib/format";
 
 const CONTENT_TYPES: { value: ContentType; label: string }[] = [
   { value: "script", label: "Script de chamada" },
@@ -97,7 +98,7 @@ export default function LeadDetailPage() {
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h1 className="font-display text-xl font-bold sm:text-2xl">{lead.company.name}</h1>
-                  <p className="text-sm text-[var(--text-muted)]">{lead.company.category}</p>
+                  <p className="text-sm text-[var(--text-muted)]">{formatCategory(lead.company.category)}</p>
                 </div>
                 {lead.company.analysis && <TemperatureBadge temperature={lead.company.analysis.leadTemperature} />}
               </div>

@@ -11,7 +11,7 @@ const SEGMENTS = [
   { key: "frio", label: "Frio", color: "var(--temp-frio)" },
   { key: "morno", label: "Morno", color: "var(--temp-morno)" },
   { key: "quente", label: "Quente", color: "var(--temp-quente)" },
-  { key: "muitoQuente", label: "Muito Quente", color: "var(--temp-muito-quente)" },
+  { key: "muitoQuente", label: "Muito quente", color: "var(--temp-muito-quente)" },
 ] as const;
 
 const RADIUS = 70;

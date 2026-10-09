@@ -115,7 +115,7 @@ export default function HomePage() {
               { label: "Frio", value: 4, color: "var(--temp-frio)" },
               { label: "Morno", value: 9, color: "var(--temp-morno)" },
               { label: "Quente", value: 14, color: "var(--temp-quente)" },
-              { label: "Muito Quente", value: 7, color: "var(--temp-muito-quente)" },
+              { label: "Muito quente", value: 7, color: "var(--temp-muito-quente)" },
             ].map((item) => (
               <div key={item.label} className="rounded-2xl border border-[var(--panel-border)] bg-white/5 p-4">
                 <span className="mb-2 block h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />

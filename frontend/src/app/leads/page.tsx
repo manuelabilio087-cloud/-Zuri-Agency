@@ -10,12 +10,13 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { PageHeader } from "@/components/page-header";
 import { TemperatureBadge } from "@/components/temperature-badge";
 import { StatusSelect } from "@/components/status-select";
+import { formatCategory } from "@/lib/format";
 
 const STATUS_TABS: { value: LeadStatus | "TODOS"; label: string }[] = [
   { value: "TODOS", label: "Todos" },
   { value: "NOVO", label: "Novo" },
   { value: "CONTACTADO", label: "Contactado" },
-  { value: "EM_NEGOCIACAO", label: "Em Negociação" },
+  { value: "EM_NEGOCIACAO", label: "Em negociação" },
   { value: "FECHADO", label: "Fechado" },
   { value: "PERDIDO", label: "Perdido" },
 ];
@@ -64,12 +65,12 @@ export default function LeadsPage() {
         }
       />
 
-      <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+      <div className="no-scrollbar -mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
         {STATUS_TABS.map((tab) => (
           <button
             key={tab.value}
             onClick={() => setActiveTab(tab.value)}
-            className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
               activeTab === tab.value
                 ? "bg-[var(--accent)] text-white"
                 : "glass-panel text-[var(--text-muted)] hover:text-white"
@@ -104,12 +105,12 @@ export default function LeadsPage() {
                       <ArrowUpRight size={13} className="flex-shrink-0 text-[var(--text-muted)]" />
                     </p>
                     <p className="truncate text-xs text-[var(--text-muted)]">
-                      {lead.company.category} · {lead.company.city}
+                      {formatCategory(lead.company.category)} · {lead.company.city}
                     </p>
                   </div>
                 </Link>
 
-                <div className="flex items-center justify-between gap-3 pl-[52px] sm:justify-end sm:pl-0">
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
                   {lead.company.analysis ? (
                     <div className="flex items-center gap-3">
                       <TemperatureBadge temperature={lead.company.analysis.leadTemperature} />

@@ -9,6 +9,7 @@ import { api, PrioritizedLead, ApiError } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { PageHeader } from "@/components/page-header";
 import { TemperatureBadge } from "@/components/temperature-badge";
+import { formatCategory } from "@/lib/format";
 
 export default function PrioritiesPage() {
   const router = useRouter();
@@ -75,7 +76,7 @@ export default function PrioritiesPage() {
 
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{p.companyName}</p>
-                <p className="truncate text-xs text-[var(--text-muted)]">{p.companyCategory}</p>
+                <p className="truncate text-xs text-[var(--text-muted)]">{formatCategory(p.companyCategory)}</p>
                 {p.justification && (
                   <p className="mt-1 flex items-start gap-1.5 text-xs text-[var(--accent)]">
                     <Flame size={11} className="mt-0.5 flex-shrink-0" /> {p.justification}

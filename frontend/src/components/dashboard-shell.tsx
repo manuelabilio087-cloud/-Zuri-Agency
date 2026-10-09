@@ -110,11 +110,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <div className="mx-auto flex max-w-[1440px] lg:gap-6 lg:p-6">
         {/* Menu lateral — PC */}
         <aside className="glass-panel sticky top-6 hidden h-[calc(100vh-3rem)] w-64 flex-shrink-0 flex-col rounded-3xl p-5 lg:flex">
-          <Link href="/dashboard" className="mb-8 px-2" aria-label="Início">
+          <Link href="/dashboard" className="mb-6 px-2" aria-label="Início">
             <Logo />
           </Link>
 
-          <nav className="flex-1 space-y-6 overflow-y-auto">
+          <nav className="thin-scroll -mx-1 flex-1 space-y-5 overflow-y-auto px-1">
             {groups.map((group) => (
               <div key={group.title}>
                 <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#a79fc2]/70">
@@ -244,7 +244,7 @@ function SidebarLink({ item, active, large = false }: { item: NavItem; active: b
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={`flex items-center justify-between rounded-xl px-3 text-sm transition-colors ${
-        large ? "py-3" : "py-2.5"
+        large ? "py-3" : "py-2"
       } ${active ? "bg-[var(--accent-soft)] font-medium text-white" : "text-[var(--text-muted)] hover:bg-white/5 hover:text-white"}`}
     >
       <span className="flex items-center gap-3">

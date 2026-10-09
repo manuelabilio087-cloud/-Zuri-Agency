@@ -5,7 +5,7 @@ import { LeadStatus } from "@/lib/api";
 const STATUS_OPTIONS: { value: LeadStatus; label: string }[] = [
   { value: "NOVO", label: "Novo" },
   { value: "CONTACTADO", label: "Contactado" },
-  { value: "EM_NEGOCIACAO", label: "Em Negociação" },
+  { value: "EM_NEGOCIACAO", label: "Em negociação" },
   { value: "FECHADO", label: "Fechado" },
   { value: "PERDIDO", label: "Perdido" },
 ];

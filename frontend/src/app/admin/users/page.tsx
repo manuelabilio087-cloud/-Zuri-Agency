@@ -87,12 +87,12 @@ export default function AdminUsersPage() {
             className="w-full rounded-xl border border-[var(--panel-border)] bg-white/5 py-3 pl-9 pr-3 text-base text-white placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none sm:py-2.5 sm:text-sm"
           />
         </div>
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           {PLAN_FILTERS.map((f) => (
             <button
               key={f.value}
               onClick={() => setPlanFilter(f.value)}
-              className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex-shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
                 planFilter === f.value ? "bg-[var(--accent)] text-white" : "glass-panel text-[var(--text-muted)] hover:text-white"
               }`}
             >

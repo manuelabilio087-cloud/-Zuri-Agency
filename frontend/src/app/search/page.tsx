@@ -8,6 +8,7 @@ import { api, Company, ApiError } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { PageHeader } from "@/components/page-header";
 import { TemperatureBadge } from "@/components/temperature-badge";
+import { formatCategory } from "@/lib/format";
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLL_ATTEMPTS = 15; // ~1 minuto
@@ -160,7 +161,7 @@ function CompanyResultCard({
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="truncate font-medium">{company.name}</h3>
-          <p className="text-xs text-[var(--text-muted)]">{company.category}</p>
+          <p className="text-xs text-[var(--text-muted)]">{formatCategory(company.category)}</p>
         </div>
         {company.analysis ? (
           <TemperatureBadge temperature={company.analysis.leadTemperature} />
