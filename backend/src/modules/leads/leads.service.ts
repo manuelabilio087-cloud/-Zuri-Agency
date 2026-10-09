@@ -1,5 +1,6 @@
 import { prisma } from "@/config/database";
 import { LeadStatus } from "@prisma/client";
+import { companiesService } from "@/modules/companies/companies.service";
 
 const FOLLOW_UP_DAYS = 7;
 const CLOSED_STATUSES: LeadStatus[] = ["FECHADO", "PERDIDO"];
@@ -35,12 +36,20 @@ export const leadsService = {
       throw Object.assign(new Error("Empresa não encontrada."), { statusCode: 404 });
     }
 
-    return prisma.lead.upsert({
+    const lead = await prisma.lead.upsert({
       where: { userId_companyId: { userId, companyId } },
       update: {},
       create: { userId, companyId },
       include: leadInclude,
     });
+
+    // Guardar um lead é o momento em que vale a pena gastar uma análise do plano.
+    const analysisStatus = await companiesService.requestAnalysis(companyId, userId).catch((err: unknown) => {
+      console.error("Falha ao pedir análise do lead:", err);
+      return null;
+    });
+
+    return { ...lead, analysisStatus };
   },
 
   // Lista os leads do utilizador, com filtros opcionais por status e por temperatura

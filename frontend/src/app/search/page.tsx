@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Search as SearchIcon, Loader2, Star, Globe, Phone, Check } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, Company, ApiError } from "@/lib/api";
@@ -44,13 +45,15 @@ export default function SearchPage() {
     }
   }
 
-  async function handleSaveLead(companyId: string) {
-    if (!accessToken) return;
+  // Devolve o estado da análise pedida ao guardar (o backend gasta 1 análise aqui).
+  async function handleSaveLead(companyId: string): Promise<SaveResult> {
+    if (!accessToken) return "error";
     try {
-      await api.saveLead(accessToken, companyId);
+      const lead = await api.saveLead(accessToken, companyId);
       setSavedIds((prev) => new Set(prev).add(companyId));
+      return lead.analysisStatus ?? "pending";
     } catch {
-      // silencioso — o botão simplesmente não fica marcado como guardado
+      return "error";
     }
   }
 
@@ -122,6 +125,9 @@ export default function SearchPage() {
   );
 }
 
+type SaveResult = "done" | "pending" | "limit" | "error";
+type CardAnalysisState = "checking" | "pending" | "done" | "idle" | "limit";
+
 function CompanyResultCard({
   company: initialCompany,
   saved,
@@ -130,31 +136,61 @@ function CompanyResultCard({
 }: {
   company: Company;
   saved: boolean;
-  onSave: () => void;
+  onSave: () => Promise<SaveResult>;
   accessToken: string;
 }) {
   const [company, setCompany] = useState(initialCompany);
-  const attemptsRef = useRef(0);
+  const [analysisState, setAnalysisState] = useState<CardAnalysisState>(initialCompany.analysis ? "done" : "checking");
+  const [saving, setSaving] = useState(false);
 
+  // Consulta o estado da análise: uma vez ao aparecer (para saber se está a decorrer ou
+  // por pedir) e depois de 4 em 4 segundos enquanto estiver a decorrer.
   useEffect(() => {
-    if (company.analysis) return;
+    if (analysisState !== "checking" && analysisState !== "pending") return;
+    let cancelled = false;
+    let attempts = 0;
 
-    const interval = setInterval(async () => {
-      attemptsRef.current += 1;
+    async function check() {
       try {
-        const status = await api.getAnalysisStatus(accessToken, company.id);
-        if (status.status === "done" && status.analysis) {
-          setCompany((prev) => ({ ...prev, analysis: status.analysis }));
-          clearInterval(interval);
+        const result = await api.getAnalysisStatus(accessToken, company.id);
+        if (cancelled) return;
+        if (result.status === "done" && result.analysis) {
+          setCompany((prev) => ({ ...prev, analysis: result.analysis }));
+          setAnalysisState("done");
+        } else if (result.status === "idle") {
+          setAnalysisState("idle");
+        } else if (analysisState === "checking") {
+          setAnalysisState("pending");
         }
       } catch {
         // ignora falhas pontuais de polling
       }
-      if (attemptsRef.current >= MAX_POLL_ATTEMPTS) clearInterval(interval);
+    }
+
+    void check();
+    const interval = setInterval(() => {
+      attempts += 1;
+      if (attempts >= MAX_POLL_ATTEMPTS) {
+        clearInterval(interval);
+        return;
+      }
+      void check();
     }, POLL_INTERVAL_MS);
 
-    return () => clearInterval(interval);
-  }, [company.analysis, company.id, accessToken]);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [analysisState, company.id, accessToken]);
+
+  async function handleSave() {
+    setSaving(true);
+    const result = await onSave();
+    setSaving(false);
+    if (result === "pending") setAnalysisState("pending");
+    else if (result === "limit") setAnalysisState("limit");
+    else if (result === "done") setAnalysisState("checking");
+  }
 
   return (
     <div className="glass-panel flex flex-col rounded-2xl p-4 sm:p-5">
@@ -163,14 +199,7 @@ function CompanyResultCard({
           <h3 className="truncate font-medium">{company.name}</h3>
           <p className="text-xs text-[var(--text-muted)]">{formatCategory(company.category)}</p>
         </div>
-        {company.analysis ? (
-          <TemperatureBadge temperature={company.analysis.leadTemperature} />
-        ) : (
-          <span className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/5 px-2.5 py-1 text-xs text-[var(--text-muted)]">
-            <Loader2 size={11} className="animate-spin" />
-            A analisar
-          </span>
-        )}
+        <AnalysisChip state={analysisState} company={company} />
       </div>
 
       <div className="mb-3 space-y-1 text-xs text-[var(--text-muted)]">
@@ -211,20 +240,53 @@ function CompanyResultCard({
         </div>
       )}
 
+      {analysisState === "idle" && !saved && (
+        <p className="mb-2 text-xs text-[var(--text-muted)]">A análise é feita quando guardas a empresa como lead.</p>
+      )}
+      {analysisState === "limit" && (
+        <p className="mb-2 text-xs text-[var(--temp-morno)]">
+          Lead guardado, mas atingiste o limite de análises do plano.{" "}
+          <Link href="/plan" className="underline">
+            Ver planos
+          </Link>
+        </p>
+      )}
+
       <button
-        onClick={onSave}
-        disabled={saved}
+        onClick={handleSave}
+        disabled={saved || saving}
         className="mt-auto flex w-full items-center justify-center gap-1.5 rounded-xl border border-[var(--panel-border)] py-2.5 text-sm font-medium transition-colors hover:bg-white/5 disabled:cursor-default disabled:border-transparent disabled:bg-[var(--accent-soft)] disabled:text-[var(--accent)]"
       >
         {saved ? (
           <>
             <Check size={14} /> Guardado nos leads
           </>
+        ) : saving ? (
+          <>
+            <Loader2 size={14} className="animate-spin" /> A guardar…
+          </>
         ) : (
-          "Guardar como lead"
+          "Guardar e analisar"
         )}
       </button>
     </div>
+  );
+}
+
+function AnalysisChip({ state, company }: { state: CardAnalysisState; company: Company }) {
+  if (company.analysis) return <TemperatureBadge temperature={company.analysis.leadTemperature} />;
+  if (state === "pending" || state === "checking") {
+    return (
+      <span className="flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white/5 px-2.5 py-1 text-xs text-[var(--text-muted)]">
+        <Loader2 size={11} className="animate-spin" />
+        A analisar
+      </span>
+    );
+  }
+  return (
+    <span className="flex-shrink-0 whitespace-nowrap rounded-full bg-white/5 px-2.5 py-1 text-xs text-[var(--text-muted)]">
+      {state === "limit" ? "Sem análises" : "Por analisar"}
+    </span>
   );
 }
 

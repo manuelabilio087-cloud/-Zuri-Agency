@@ -3,7 +3,7 @@ import { env } from "@/config/env";
 import { getLastActivityDate, daysSince } from "@/modules/leads/leads.service";
 
 const MAX_PRIORITIES = 15;
-const JUSTIFICATION_MODEL = "claude-haiku-4-5-20251001"; // frase curta e estruturada: modelo económico
+const JUSTIFICATION_MODEL = "claude-haiku-5-5"; // frase curta e estruturada: modelo económico
 
 interface PrioritizedLead {
   leadId: string;

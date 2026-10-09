@@ -29,6 +29,8 @@ export default function LeadDetailPage() {
   const [generating, setGenerating] = useState<ContentType | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  // Estado da análise quando o lead ainda não a tem: pedida automaticamente ao abrir.
+  const [analysisState, setAnalysisState] = useState<"idle" | "pending" | "limit" | "error">("idle");
 
   useEffect(() => {
     if (!isLoading && !user) router.replace("/login");
@@ -38,6 +40,48 @@ export default function LeadDetailPage() {
     if (!accessToken) return;
     api.getLead(accessToken, id).then(setLead).catch(() => setLead(null));
   }, [accessToken, id]);
+
+  // Lead sem análise (ex: guardado quando o limite já tinha acabado): pede-a ao abrir.
+  const companyId = lead?.company.id;
+  const hasAnalysis = Boolean(lead?.company.analysis);
+  useEffect(() => {
+    if (!accessToken || !companyId || hasAnalysis) return;
+    let cancelled = false;
+    api
+      .analyzeCompany(accessToken, companyId)
+      .then(() => !cancelled && setAnalysisState("pending"))
+      .catch((err) => {
+        if (cancelled) return;
+        setAnalysisState(err instanceof ApiError && err.upgradeRequired ? "limit" : "error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, companyId, hasAnalysis]);
+
+  // Enquanto a análise decorre, volta a carregar o lead de 4 em 4 segundos (máx. ~1,5 min).
+  useEffect(() => {
+    if (analysisState !== "pending" || !accessToken || hasAnalysis) return;
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts += 1;
+      try {
+        const refreshed = await api.getLead(accessToken, id);
+        if (refreshed.company.analysis) {
+          setLead(refreshed);
+          setAnalysisState("idle");
+          clearInterval(interval);
+        }
+      } catch {
+        // tenta de novo no próximo ciclo
+      }
+      if (attempts >= 22) {
+        clearInterval(interval);
+        setAnalysisState("error");
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [analysisState, accessToken, hasAnalysis, id]);
 
   async function handleStatusChange(status: Lead["status"]) {
     if (!accessToken || !lead) return;
@@ -132,6 +176,11 @@ export default function LeadDetailPage() {
               </div>
             </div>
 
+            {/* Análise em curso / indisponível */}
+            {!lead.company.analysis && (
+              <AnalysisNotice state={analysisState} />
+            )}
+
             {/* Scores da análise */}
             {lead.company.analysis && (
               <div className="glass-panel rounded-3xl p-5 sm:p-6">
@@ -182,7 +231,7 @@ export default function LeadDetailPage() {
               </div>
 
               {!lead.company.analysis && (
-                <p className="text-xs text-[var(--text-muted)]">A análise ainda não está pronta — aguarda uns instantes.</p>
+                <p className="text-xs text-[var(--text-muted)]">Disponível depois da análise do lead.</p>
               )}
               {genError && <p className="mb-3 text-xs text-[var(--temp-muito-quente)]">{genError}</p>}
 
@@ -241,6 +290,35 @@ export default function LeadDetailPage() {
         </div>
       )}
     </DashboardShell>
+  );
+}
+
+function AnalysisNotice({ state }: { state: "idle" | "pending" | "limit" | "error" }) {
+  if (state === "limit") {
+    return (
+      <div className="glass-panel rounded-3xl border-[var(--temp-morno)]/30 p-5 text-sm sm:p-6">
+        <p className="font-medium">Sem análises disponíveis este mês</p>
+        <p className="mt-1 text-[var(--text-muted)]">
+          Atingiste o limite de análises do teu plano. Faz upgrade para analisar este lead e gerar abordagens.
+        </p>
+        <Link href="/plan" className="mt-3 inline-block rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white">
+          Ver planos
+        </Link>
+      </div>
+    );
+  }
+  if (state === "error") {
+    return (
+      <div className="glass-panel rounded-3xl p-5 text-sm text-[var(--text-muted)] sm:p-6">
+        A análise está a demorar mais do que o normal. Recarrega a página daqui a pouco.
+      </div>
+    );
+  }
+  return (
+    <div className="glass-panel flex items-center gap-3 rounded-3xl p-5 text-sm text-[var(--text-muted)] sm:p-6">
+      <Loader2 size={16} className="animate-spin" />
+      A analisar a maturidade digital desta empresa…
+    </div>
   );
 }
 

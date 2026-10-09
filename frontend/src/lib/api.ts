@@ -122,6 +122,9 @@ async function downloadFile(path: string, token: string, filename: string): Prom
 export type Plan = "FREE" | "STARTER" | "PRO";
 export type LeadStatus = "NOVO" | "CONTACTADO" | "EM_NEGOCIACAO" | "FECHADO" | "PERDIDO";
 export type LeadTemperature = "frio" | "morno" | "quente" | "muito_quente";
+// done: pronta · pending: a decorrer · idle: ainda não pedida (analisa-se ao guardar o lead)
+export type AnalysisStatus = "done" | "pending" | "idle";
+
 export type ContentType = "script" | "email" | "whatsapp" | "proposta";
 
 export interface AuthUser {
@@ -311,14 +314,22 @@ export const api = {
   },
 
   getAnalysisStatus(token: string, id: string) {
-    return request<{ status: "pending" | "done"; analysis: CompanyAnalysis | null }>(
+    return request<{ status: AnalysisStatus; analysis: CompanyAnalysis | null }>(
       `/api/companies/${id}/analysis-status`,
       { headers: authHeader(token) }
     );
   },
 
+  // Pede a análise de uma empresa; 403 com upgradeRequired quando o limite do plano acabou.
+  analyzeCompany(token: string, companyId: string) {
+    return request<{ status: "done" | "pending" }>(`/api/companies/${companyId}/analyze`, {
+      method: "POST",
+      headers: authHeader(token),
+    });
+  },
+
   saveLead(token: string, companyId: string) {
-    return request<Lead>("/api/leads", {
+    return request<Lead & { analysisStatus: "done" | "pending" | "limit" | null }>("/api/leads", {
       method: "POST",
       headers: authHeader(token),
       body: JSON.stringify({ companyId }),

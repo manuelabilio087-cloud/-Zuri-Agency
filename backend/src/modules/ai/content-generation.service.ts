@@ -3,7 +3,7 @@ import { env } from "@/config/env";
 
 // Modelo mais avançado, reservado para geração de conteúdo comercial (qualidade do texto
 // tem impacto direto na conversão) — diferente do modelo económico usado no scoring.
-const CONTENT_MODEL = "claude-sonnet-5";
+const CONTENT_MODEL = "claude-sonnet-5-5";
 
 export type ContentType = "script" | "email" | "whatsapp" | "proposta";
 

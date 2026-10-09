@@ -43,4 +43,23 @@ export const companiesController = {
       next(err);
     }
   },
+
+  // POST /companies/:id/analyze — pede a análise (gasta 1 análise do plano se ainda não existir).
+  async analyze(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const status = await companiesService.requestAnalysis(req.params.id, req.userId!);
+      if (!status) {
+        return res.status(404).json({ message: "Empresa não encontrada." });
+      }
+      if (status === "limit") {
+        return res.status(403).json({
+          message: "Atingiste o limite de análises do teu plano este mês.",
+          upgradeRequired: true,
+        });
+      }
+      res.status(200).json({ status });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

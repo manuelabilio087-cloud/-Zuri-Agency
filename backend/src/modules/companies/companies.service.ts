@@ -15,7 +15,7 @@ export interface SearchCompaniesInput {
 
 export type SearchSource = "cache" | "google_places" | "cache_stale";
 
-async function getRemainingAnalysisQuota(userId: string): Promise<number> {
+export async function getRemainingAnalysisQuota(userId: string): Promise<number> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return 0;
 
@@ -33,22 +33,54 @@ async function getRemainingAnalysisQuota(userId: string): Promise<number> {
   return Math.max(0, limit - used);
 }
 
-// Dispara a análise (Website Analyzer + Scoring) para empresas ainda sem CompanyAnalysis,
-// respeitando o limite de análises do plano do utilizador. Fire-and-forget: o pedido de
-// pesquisa não espera pela análise terminar (PRD 4.2, ponto 6 — polling no frontend).
+export type AnalysisRequestStatus = "done" | "pending" | "limit";
+
+// Dispara a análise (Website Analyzer + Scoring) dos resultados de pesquisa — só para
+// planos com análises ilimitadas (Pro). Nos planos com limite, as análises são gastas
+// apenas nas empresas que o utilizador guarda como lead (ver requestAnalysis), para não
+// esgotar a quota em resultados que nem lhe interessam.
 async function triggerAnalysisForNewCompanies(companies: Array<{ id: string; [key: string]: unknown }>, userId: string) {
   const pending = companies.filter((c) => !("analysis" in c) || c.analysis === null);
   if (pending.length === 0) return;
 
   const remaining = await getRemainingAnalysisQuota(userId);
-  const toAnalyze = pending.slice(0, remaining);
+  if (remaining !== Infinity) return;
 
-  for (const company of toAnalyze) {
+  for (const company of pending) {
+    if (!companyAnalysisService.tryReserve(company.id)) continue;
     prisma.usageLog
       .create({ data: { userId, action: "analysis" } })
       .then(() => companyAnalysisService.analyzeCompany(company as never))
-      .catch((err: unknown) => console.error("Falha ao registar/disparar análise:", err));
+      .catch((err: unknown) => {
+        companyAnalysisService.release(company.id);
+        console.error("Falha ao registar/disparar análise:", err);
+      });
   }
+}
+
+// Pede a análise de uma empresa (ao guardar um lead, ou a pedido no detalhe do lead).
+// Gasta 1 análise do plano só se a empresa ainda não tiver análise nem estiver a ser analisada.
+async function requestAnalysis(companyId: string, userId: string): Promise<AnalysisRequestStatus | null> {
+  const company = await prisma.company.findUnique({ where: { id: companyId }, include: { analysis: true } });
+  if (!company) return null;
+  if (company.analysis) return "done";
+  if (!companyAnalysisService.tryReserve(companyId)) return "pending";
+
+  try {
+    const remaining = await getRemainingAnalysisQuota(userId);
+    if (remaining <= 0) {
+      companyAnalysisService.release(companyId);
+      return "limit";
+    }
+    await prisma.usageLog.create({ data: { userId, action: "analysis" } });
+  } catch (err) {
+    companyAnalysisService.release(companyId);
+    throw err;
+  }
+
+  const { analysis: _analysis, ...companyData } = company;
+  void companyAnalysisService.analyzeCompany(companyData);
+  return "pending";
 }
 
 export const companiesService = {
@@ -99,6 +131,8 @@ export const companiesService = {
     return { companies, source: "google_places" as SearchSource };
   },
 
+  requestAnalysis,
+
   async getById(id: string) {
     return prisma.company.findUnique({ where: { id }, include: { analysis: true } });
   },
@@ -111,9 +145,14 @@ export const companiesService = {
 
     if (!company) return null;
 
-    return {
-      status: company.analysis ? ("done" as const) : ("pending" as const),
-      analysis: company.analysis,
-    };
+    // done: análise pronta · pending: a decorrer · idle: ainda não pedida (ex: resultado
+    // de pesquisa num plano com limite — analisa-se quando for guardado como lead).
+    const status = company.analysis
+      ? ("done" as const)
+      : companyAnalysisService.isRunning(company.id)
+        ? ("pending" as const)
+        : ("idle" as const);
+
+    return { status, analysis: company.analysis };
   },
 };

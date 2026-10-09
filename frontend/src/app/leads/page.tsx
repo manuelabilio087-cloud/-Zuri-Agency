@@ -3,9 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, ArrowUpRight } from "lucide-react";
+import { Plus, ArrowUpRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { api, Lead, LeadStatus } from "@/lib/api";
+import { api, ApiError, Lead, LeadStatus } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { PageHeader } from "@/components/page-header";
 import { TemperatureBadge } from "@/components/temperature-badge";
@@ -41,6 +41,32 @@ export default function LeadsPage() {
     loadLeads();
   }, [loadLeads]);
 
+  // Analisa de uma vez os leads guardados sem análise (respeitando o limite do plano).
+  const [bulk, setBulk] = useState<"idle" | "running" | "limit">("idle");
+  const unanalyzed = leads?.filter((l) => !l.company.analysis) ?? [];
+
+  async function handleAnalyzePending() {
+    if (!accessToken || unanalyzed.length === 0) return;
+    setBulk("running");
+    let hitLimit = false;
+    for (const lead of unanalyzed) {
+      try {
+        await api.analyzeCompany(accessToken, lead.company.id);
+      } catch (err) {
+        if (err instanceof ApiError && err.upgradeRequired) {
+          hitLimit = true;
+          break;
+        }
+      }
+    }
+    // As análises correm em segundo plano: recarrega a lista algumas vezes.
+    for (let i = 0; i < 8; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      loadLeads();
+    }
+    setBulk(hitLimit ? "limit" : "idle");
+  }
+
   async function handleStatusChange(leadId: string, status: LeadStatus) {
     if (!accessToken) return;
     setLeads((prev) => prev?.map((l) => (l.id === leadId ? { ...l, status } : l)) ?? null);
@@ -64,6 +90,35 @@ export default function LeadsPage() {
           </Link>
         }
       />
+
+      {unanalyzed.length > 0 && (
+        <div className="glass-panel mb-5 flex flex-col gap-3 rounded-2xl p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-medium">
+              {unanalyzed.length} {unanalyzed.length === 1 ? "lead ainda sem análise" : "leads ainda sem análise"}
+            </p>
+            <p className="text-xs text-[var(--text-muted)]">
+              {bulk === "limit"
+                ? "Atingiste o limite de análises do plano este mês."
+                : "Cada lead analisado gasta 1 análise do teu plano."}
+            </p>
+          </div>
+          {bulk === "limit" ? (
+            <Link href="/plan" className="rounded-full bg-[var(--accent)] px-4 py-2 text-center text-sm font-medium text-white">
+              Ver planos
+            </Link>
+          ) : (
+            <button
+              onClick={handleAnalyzePending}
+              disabled={bulk === "running"}
+              className="flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            >
+              {bulk === "running" && <Loader2 size={14} className="animate-spin" />}
+              {bulk === "running" ? "A analisar…" : "Analisar agora"}
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="no-scrollbar -mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
         {STATUS_TABS.map((tab) => (
@@ -119,7 +174,7 @@ export default function LeadsPage() {
                       </span>
                     </div>
                   ) : (
-                    <span className="text-xs text-[var(--text-muted)]">A analisar…</span>
+                    <span className="text-xs text-[var(--text-muted)]">Sem análise</span>
                   )}
                   <StatusSelect value={lead.status} onChange={(status) => handleStatusChange(lead.id, status)} />
                 </div>

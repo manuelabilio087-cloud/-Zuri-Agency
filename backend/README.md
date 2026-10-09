@@ -94,7 +94,7 @@ Preenche `GOOGLE_PLACES_API_KEY` no `.env` com uma chave com a **Places API (New
 Depois de uma pesquisa devolver empresas, o sistema dispara automaticamente (em background, sem bloquear a resposta) a análise de cada empresa nova:
 
 1. **Sinais técnicos** (`website-analyzer.service.ts`) — HTTPS, viewport mobile, velocidade de resposta, título/meta description, headings, dados estruturados — tudo calculado sem IA.
-2. **Sinais qualitativos** — se `ANTHROPIC_API_KEY` estiver definida, o conteúdo do website é enviado ao modelo `claude-haiku-4-5-20251001` (custo-eficiente, adequado para esta tarefa estruturada) para avaliar qualidade de conteúdo, clareza de contacto, CTA e frescura visual. Sem chave configurada, estes fatores ficam a 0 (o resto do score continua a funcionar).
+2. **Sinais qualitativos** — se `ANTHROPIC_API_KEY` estiver definida, o conteúdo do website é enviado ao modelo `claude-haiku-5-5` (custo-eficiente, adequado para esta tarefa estruturada) para avaliar qualidade de conteúdo, clareza de contacto, CTA e frescura visual. Sem chave configurada, estes fatores ficam a 0 (o resto do score continua a funcionar).
 3. **Scoring** (`scoring.service.ts`) — combina os sinais acima com os dados da própria empresa (rating, reviews, contacto) em `salesScore`, `leadTemperature`, `recommendedService` e `closeProbability`, e persiste tudo em `CompanyAnalysis`.
 
 O número de análises disparadas por pesquisa respeita o limite `analysesPerMonth` do plano do utilizador — se o limite for atingido, as empresas ficam sem análise (`status: "pending"` no endpoint de status) até ao próximo mês ou upgrade.
@@ -108,7 +108,7 @@ O número de análises disparadas por pesquisa respeita o limite `analysesPerMon
 1. Busca o lead (empresa + análise já calculada) e o utilizador (para saber `serviceType`, o que ele vende).
 2. Deriva as "lacunas" da empresa (`keyGaps`) a partir da análise (ex: "sem website", "poucas avaliações online").
 3. Monta o prompt correspondente ao `type` pedido — os 4 templates exatos do PRD (script de chamada, email, WhatsApp, proposta comercial).
-4. Chama o modelo `claude-sonnet-5` — mais avançado que o usado no scoring, porque aqui a qualidade do texto tem impacto direto na conversão.
+4. Chama o modelo `claude-sonnet-5-5` — mais avançado que o usado no scoring, porque aqui a qualidade do texto tem impacto direto na conversão.
 5. Persiste o resultado em `GeneratedContent`, associado ao lead, para o utilizador poder reutilizar/editar sem gerar de novo.
 
 Cada geração consome uma unidade do limite `aiGenerationsPerMonth` do plano do utilizador.

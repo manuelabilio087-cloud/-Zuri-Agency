@@ -1,6 +1,6 @@
 import { env } from "@/config/env";
 
-const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"; // modelo custo-eficiente para scoring (PRD secção "Prompt 3", nota de custo)
+const ANTHROPIC_MODEL = "claude-haiku-5-5"; // modelo custo-eficiente para scoring (PRD secção "Prompt 3", nota de custo)
 const FETCH_TIMEOUT_MS = 8_000;
 const TEXT_SAMPLE_LIMIT = 3_000;
 

@@ -13,5 +13,8 @@ companiesRoutes.post("/search", requireAuth, enforcePlanLimit("search"), compani
 // Ficha completa da empresa, incluindo a análise (quando já estiver pronta).
 companiesRoutes.get("/:id", requireAuth, companiesController.getById);
 
+// Pede a análise de uma empresa (detalhe do lead / "Analisar pendentes").
+companiesRoutes.post("/:id/analyze", requireAuth, companiesController.analyze);
+
 // Polling do frontend enquanto a análise em background ainda não terminou.
 companiesRoutes.get("/:id/analysis-status", requireAuth, companiesController.getAnalysisStatus);
