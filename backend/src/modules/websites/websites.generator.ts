@@ -1,5 +1,6 @@
 import { env } from "@/config/env";
-import { WebsiteContent, websiteContentSchema } from "@/modules/websites/websites.types";
+import { KIND_PROFILE, kindFromCategory, titleCaseCity } from "@/modules/websites/websites.kinds";
+import { SiteKind, WebsiteContent, websiteContentSchema } from "@/modules/websites/websites.types";
 
 const SITE_MODEL = "claude-sonnet-5-5";
 
@@ -81,100 +82,136 @@ const CATEGORY_PT: Record<string, string> = {
   tourist_attraction: "atração turística",
 };
 
-function readableCategory(category: string): string {
+// Restaurantes por tipo de cozinha (categorias Google como "portuguese_restaurant").
+const CUISINE: Record<string, string> = {
+  portuguese: "restaurante de cozinha portuguesa",
+  italian: "restaurante italiano",
+  chinese: "restaurante chinês",
+  indian: "restaurante indiano",
+  japanese: "restaurante japonês",
+  sushi: "restaurante de sushi",
+  seafood: "marisqueira",
+  brazilian: "restaurante brasileiro",
+  mexican: "restaurante mexicano",
+  african: "restaurante de cozinha africana",
+  french: "restaurante francês",
+  thai: "restaurante tailandês",
+  american: "restaurante americano",
+  mediterranean: "restaurante mediterrânico",
+  vegetarian: "restaurante vegetariano",
+  vegan: "restaurante vegano",
+  steak_house: "churrascaria",
+  barbecue: "restaurante de grelhados",
+  fast_food: "fast food",
+  pizza: "pizzaria",
+  hamburger: "hamburgueria",
+  korean: "restaurante coreano",
+  turkish: "restaurante turco",
+  lebanese: "restaurante libanês",
+  greek: "restaurante grego",
+  spanish: "restaurante espanhol",
+  middle_eastern: "restaurante do Médio Oriente",
+};
+
+export function readableCategory(category: string): string {
   const key = category.trim().toLowerCase();
-  return CATEGORY_PT[key] ?? category.replace(/_/g, " ").trim();
+  if (CATEGORY_PT[key]) return CATEGORY_PT[key];
+  if (key.endsWith("_restaurant")) return CUISINE[key.slice(0, -"_restaurant".length)] ?? "restaurante";
+  return category.replace(/_/g, " ").trim();
+}
+
+const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+// Estrutura inicial de cada tipo: só nomes de categorias e títulos — nada de pratos,
+// preços, médicos ou planos inventados (esses ficam vazios e as secções escondidas).
+// Categorias vazias já prontas a preencher no editor (os títulos das secções vêm do
+// tipo de negócio no renderer, por isso não se guardam aqui).
+function kindStructure(kind: SiteKind) {
+  if (kind === "restaurante") {
+    return { catalog: { title: "", categories: ["Entradas", "Pratos principais", "Bebidas", "Sobremesas"].map((name) => ({ name, items: [] })) } };
+  }
+  if (kind === "salao") return { catalog: { title: "", categories: [{ name: "Serviços", items: [] }] } };
+  return {};
 }
 
 // Conteúdo base, sem IA: usado quando a chave da IA não está configurada ou a IA falha.
 // Tudo é editável no editor.
 export function fallbackContent(data: SiteSourceData): WebsiteContent {
+  const kind = kindFromCategory(data.category);
   const cat = readableCategory(data.category);
-  return {
+  const city = titleCaseCity(data.city);
+  const profile = KIND_PROFILE[kind];
+  return websiteContentSchema.parse({
+    kind,
     seo: {
-      title: `${data.businessName} | ${data.city}`.slice(0, 70),
-      description: `${data.businessName} — ${cat} em ${data.city}. Contacte-nos por telefone ou WhatsApp.`.slice(0, 160),
+      title: `${data.businessName} | ${city}`.slice(0, 70),
+      description: `${data.businessName} — ${cat} em ${city}. Contacte-nos por telefone ou WhatsApp.`.slice(0, 160),
     },
     hero: {
       headline: data.businessName.slice(0, 90),
-      subheadline: `${cat.charAt(0).toUpperCase()}${cat.slice(1)} em ${data.city}, com atendimento próximo e de confiança.`.slice(0, 220),
-      ctaLabel: "Falar connosco",
+      subheadline: `${capitalize(cat)} em ${city}, com atendimento próximo e de confiança.`.slice(0, 220),
+      ctaLabel: profile.cta,
       imageUrl: "",
+      rotating: [capitalize(cat).slice(0, 40), `Em ${city}`.slice(0, 40), "Fale connosco pelo WhatsApp"],
     },
+    booking: { message: profile.message },
     brand: { logoUrl: "", showName: true },
     about: {
       title: `Sobre a ${data.businessName}`.slice(0, 60),
-      text: `A ${data.businessName} está em ${data.city} para servir os seus clientes com qualidade e dedicação.\n\nEdite este texto para contar a história do negócio, o que o torna diferente e porque os clientes confiam em si.`,
+      text: `A ${data.businessName} está em ${city} para servir os seus clientes com qualidade e dedicação.`,
       imageUrl: "",
     },
-    services: {
-      title: "O que oferecemos",
-      items: [
-        { name: "Serviço principal", description: "Descreva aqui o serviço mais procurado pelos seus clientes.", imageUrl: "" },
-        { name: "Atendimento personalizado", description: "Explique como acompanha cada cliente do início ao fim.", imageUrl: "" },
-        { name: "Contacto rápido", description: "Fale connosco por telefone ou WhatsApp e responderemos o mais depressa possível.", imageUrl: "" },
-      ],
-    },
+    // Sem IA não há serviços: melhor uma secção escondida do que texto de exemplo publicado.
+    services: { title: kind === "geral" ? "O que oferecemos" : "", items: [] },
+    ...kindStructure(kind),
     // Testemunhos começam vazios: só o utilizador os escreve, com palavras reais de clientes.
     testimonials: { title: "O que dizem os nossos clientes", items: [] },
     contact: {
       phone: data.phone ?? "",
       whatsapp: data.phone ?? "",
       email: "",
-      address: data.address ?? data.city,
+      address: data.address ?? city,
       hours: "",
       showMap: Boolean(data.address),
     },
     rating: data.rating !== null && (data.reviewsCount ?? 0) > 0 ? { value: data.rating, count: data.reviewsCount ?? 0 } : null,
-  };
+  });
 }
 
-function buildPrompt(data: SiteSourceData): string {
+const SERVICES_HINT: Record<SiteKind, string> = {
+  restaurante: "3 a 4 serviços gerais muito prováveis num restaurante deste tipo (ex.: refeições no local, take-away). Não inventes pratos.",
+  clinica: "3 a 6 especialidades ou tratamentos típicos deste tipo de clínica, descritos de forma genérica.",
+  ginasio: "3 a 6 modalidades típicas de um ginásio (ex.: musculação, aulas de grupo, cardio), descritas de forma genérica.",
+  salao: "3 a 6 serviços típicos deste tipo de salão ou barbearia, descritos de forma genérica.",
+  geral: "3 a 6 serviços típicos deste tipo de negócio, descritos de forma genérica e credível.",
+};
+
+function buildPrompt(data: SiteSourceData, kind: SiteKind): string {
   return `Escreve o texto de um site de uma página para uma empresa em Moçambique, em português de Moçambique.
 
 Dados reais da empresa:
 - Nome: ${data.businessName}
-- Tipo de negócio (categoria Google): ${readableCategory(data.category)}
-- Cidade: ${data.city}
+- Tipo de negócio: ${readableCategory(data.category)}
+- Cidade: ${titleCaseCity(data.city)}
 - Morada: ${data.address ?? "não indicada"}
 
 Regras:
-- Não inventes factos: nada de prémios, anos de experiência, números de clientes, preços, nomes de pessoas ou testemunhos.
-- Os serviços devem ser os típicos deste tipo de negócio, descritos de forma genérica e credível (3 a 6).
+- Não inventes factos: nada de prémios, anos de experiência, números de clientes, preços, pratos, nomes de pessoas ou testemunhos.
+- Serviços: ${SERVICES_HINT[kind]}
+- "rotating": 3 frases muito curtas (2 a 4 palavras) que descrevem o tipo de negócio sem inventar factos (ex.: "Cozinha portuguesa").
 - Tom profissional, caloroso e direto. Frases curtas. Sem emojis.
 - Respeita os limites de caracteres.
 
 Responde APENAS com JSON válido neste formato:
 {
   "seo": { "title": "até 60 caracteres", "description": "até 155 caracteres" },
-  "hero": { "headline": "até 70 caracteres", "subheadline": "até 180 caracteres", "ctaLabel": "até 24 caracteres" },
+  "hero": { "headline": "até 70 caracteres", "subheadline": "até 180 caracteres", "rotating": ["…", "…", "…"] },
   "about": { "title": "até 50 caracteres", "text": "2 parágrafos curtos separados por linha em branco" },
   "services": { "title": "até 50 caracteres", "items": [ { "name": "até 50 caracteres", "description": "até 200 caracteres" } ] }
 }`;
 }
 
 const cut = (value: unknown, max: number) => (typeof value === "string" ? value.trim().slice(0, max) : "");
-
-// Corta cada texto ao limite do respetivo campo, em vez de rejeitar a resposta inteira.
-function clamp(c: WebsiteContent): WebsiteContent {
-  return {
-    ...c,
-    seo: { title: cut(c.seo.title, 70), description: cut(c.seo.description, 160) },
-    hero: {
-      headline: cut(c.hero.headline, 90),
-      subheadline: cut(c.hero.subheadline, 220),
-      ctaLabel: cut(c.hero.ctaLabel, 30) || "Falar connosco",
-      imageUrl: "",
-    },
-    about: { title: cut(c.about.title, 60), text: cut(c.about.text, 1200), imageUrl: "" },
-    services: {
-      title: cut(c.services.title, 60),
-      items: (Array.isArray(c.services.items) ? c.services.items : [])
-        .map((item) => ({ name: cut(item?.name, 60), description: cut(item?.description, 240), imageUrl: "" }))
-        .filter((item) => item.name),
-    },
-  };
-}
 
 // Gera o texto do site com IA e junta os dados reais (contactos, classificação Google).
 export async function generateSiteContent(data: SiteSourceData): Promise<{ content: WebsiteContent; usedAi: boolean }> {
@@ -191,8 +228,8 @@ export async function generateSiteContent(data: SiteSourceData): Promise<{ conte
       },
       body: JSON.stringify({
         model: SITE_MODEL,
-        max_tokens: 1500,
-        messages: [{ role: "user", content: buildPrompt(data) }],
+        max_tokens: 1600,
+        messages: [{ role: "user", content: buildPrompt(data, base.kind) }],
       }),
       signal: AbortSignal.timeout(45_000),
     });
@@ -200,20 +237,33 @@ export async function generateSiteContent(data: SiteSourceData): Promise<{ conte
 
     const json = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
     const text = json.content?.find((b) => b.type === "text")?.text ?? "";
-    const parsed = JSON.parse(text.replace(/```json|```/g, "").trim()) as Partial<WebsiteContent>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const parsed = JSON.parse(text.replace(/```json|```/g, "").trim()) as any;
 
-    // Só os textos vêm da IA; testemunhos, marca e fotos ficam sempre os da base (vazios).
+    // Só os textos vêm da IA (cortados aos limites); tudo o resto fica o da base.
+    const rotating = Array.isArray(parsed?.hero?.rotating)
+      ? parsed.hero.rotating.map((r: unknown) => cut(r, 40)).filter(Boolean).slice(0, 4)
+      : base.hero.rotating;
+    const items = Array.isArray(parsed?.services?.items) ? parsed.services.items : [];
     const candidate = {
       ...base,
-      seo: { ...base.seo, ...parsed.seo },
-      hero: { ...base.hero, ...parsed.hero, imageUrl: "" },
-      about: { ...base.about, ...parsed.about },
+      seo: { title: cut(parsed?.seo?.title, 70) || base.seo.title, description: cut(parsed?.seo?.description, 160) || base.seo.description },
+      hero: {
+        ...base.hero,
+        headline: cut(parsed?.hero?.headline, 90) || base.hero.headline,
+        subheadline: cut(parsed?.hero?.subheadline, 220) || base.hero.subheadline,
+        rotating: rotating.length >= 2 ? rotating : base.hero.rotating,
+      },
+      about: { ...base.about, title: cut(parsed?.about?.title, 60) || base.about.title, text: cut(parsed?.about?.text, 1200) || base.about.text },
       services: {
-        title: parsed.services?.title ?? base.services.title,
-        items: (parsed.services?.items ?? base.services.items).slice(0, 6),
+        title: cut(parsed?.services?.title, 60) || base.services.title,
+        items: items
+          .map((item: { name?: unknown; description?: unknown }) => ({ name: cut(item?.name, 60), description: cut(item?.description, 240), imageUrl: "" }))
+          .filter((item: { name: string }) => item.name)
+          .slice(0, 6),
       },
     };
-    const result = websiteContentSchema.safeParse(clamp(candidate));
+    const result = websiteContentSchema.safeParse(candidate);
     if (!result.success) return { content: base, usedAi: false };
     return { content: result.data, usedAi: true };
   } catch (err) {

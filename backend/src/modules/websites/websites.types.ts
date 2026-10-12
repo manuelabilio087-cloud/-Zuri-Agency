@@ -18,6 +18,16 @@ const photo = httpsUrl.optional().default("");
 export const SITE_STYLES = ["elegante", "moderno", "vibrante"] as const;
 export type SiteStyle = (typeof SITE_STYLES)[number];
 
+// Tipo de negócio: decide que secções o site mostra e em que ordem.
+export const SITE_KINDS = ["restaurante", "clinica", "ginasio", "salao", "geral"] as const;
+export type SiteKind = (typeof SITE_KINDS)[number];
+
+export const WEEK_DAYS = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"] as const;
+
+const txt = (max: number) => z.string().trim().max(max).optional().default("");
+// Preço livre ("350", "350 MT", "a partir de 500"); vazio = não mostra preço.
+const price = txt(30);
+
 export const websiteContentSchema = z.object({
   seo: z.object({
     title: z.string().trim().max(70),
@@ -31,12 +41,81 @@ export const websiteContentSchema = z.object({
     })
     .optional()
     .default({ logoUrl: "", showName: true }),
+  kind: z.enum(SITE_KINDS).optional().default("geral"),
   hero: z.object({
     headline: z.string().trim().min(1).max(90),
     subheadline: z.string().trim().max(220),
     ctaLabel: z.string().trim().min(1).max(30),
     imageUrl: photo,
+    // Mais fotos no topo: com 2 ou mais, o topo passa a uma galeria animada.
+    gallery: z.array(httpsUrl).max(4).optional().default([]),
+    // Frases curtas que vão mudando por baixo do título.
+    rotating: z.array(z.string().trim().max(40)).max(4).optional().default([]),
   }),
+  // Mensagem já escrita quando o cliente toca no botão principal (WhatsApp).
+  booking: z.object({ message: txt(300) }).optional().default({ message: "" }),
+  // Prato da casa / serviço em destaque.
+  highlight: z
+    .object({ title: txt(60), name: txt(80), description: txt(300), price, imageUrl: photo })
+    .optional()
+    .default({ title: "", name: "", description: "", price: "", imageUrl: "" }),
+  // Menu (restaurante) ou tabela de serviços e preços (salão), por categorias.
+  catalog: z
+    .object({
+      title: txt(60),
+      categories: z
+        .array(
+          z.object({
+            name: txt(40),
+            items: z
+              .array(z.object({ name: txt(80), description: txt(200), price, detail: txt(30), imageUrl: photo }))
+              .max(30),
+          })
+        )
+        .max(8),
+    })
+    .optional()
+    .default({ title: "", categories: [] }),
+  gallery: z
+    .object({ title: txt(60), images: z.array(z.object({ url: httpsUrl, caption: txt(80) })).max(12) })
+    .optional()
+    .default({ title: "", images: [] }),
+  team: z
+    .object({ title: txt(60), members: z.array(z.object({ name: txt(60), role: txt(80), imageUrl: photo })).max(12) })
+    .optional()
+    .default({ title: "", members: [] }),
+  plans: z
+    .object({
+      title: txt(60),
+      items: z
+        .array(
+          z.object({
+            name: txt(40),
+            price,
+            period: txt(20),
+            features: z.array(z.string().trim().max(80)).max(8).optional().default([]),
+            featured: z.boolean().optional().default(false),
+          })
+        )
+        .max(4),
+    })
+    .optional()
+    .default({ title: "", items: [] }),
+  schedule: z
+    .object({ title: txt(60), entries: z.array(z.object({ day: z.enum(WEEK_DAYS), time: txt(12), name: txt(50) })).max(60) })
+    .optional()
+    .default({ title: "", entries: [] }),
+  // Seguros aceites (clínica) ou formas de pagamento (M-Pesa, e-Mola…).
+  partners: z
+    .object({ title: txt(60), items: z.array(z.string().trim().max(40)).max(16) })
+    .optional()
+    .default({ title: "", items: [] }),
+  faq: z
+    .object({ title: txt(60), items: z.array(z.object({ q: txt(140), a: txt(500) })).max(10) })
+    .optional()
+    .default({ title: "", items: [] }),
+  // Faixa com uma imagem que se move ao deslizar a página.
+  band: z.object({ imageUrl: photo, text: txt(120) }).optional().default({ imageUrl: "", text: "" }),
   about: z.object({
     title: z.string().trim().max(60),
     text: z.string().trim().max(1200),
@@ -47,8 +126,9 @@ export const websiteContentSchema = z.object({
     items: z
       .array(
         z.object({
-          name: z.string().trim().min(1).max(60),
-          description: z.string().trim().max(240),
+          // Pode ficar vazio enquanto se edita: sem nome, o item não aparece no site.
+          name: z.string().trim().max(60),
+          description: z.string().trim().max(240).optional().default(""),
           imageUrl: photo,
         })
       )

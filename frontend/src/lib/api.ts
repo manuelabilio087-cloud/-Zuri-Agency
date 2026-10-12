@@ -249,10 +249,40 @@ export interface WebsiteTestimonial {
   text: string;
 }
 
+export type SiteKind = "restaurante" | "clinica" | "ginasio" | "salao" | "geral";
+export type WeekDay = "seg" | "ter" | "qua" | "qui" | "sex" | "sab" | "dom";
+
+export interface CatalogItem {
+  name: string;
+  description: string;
+  price: string;
+  detail: string;
+  imageUrl: string;
+}
+
+export interface WebsitePlan {
+  name: string;
+  price: string;
+  period: string;
+  features: string[];
+  featured: boolean;
+}
+
 export interface WebsiteContent {
   seo: { title: string; description: string };
   brand: { logoUrl: string; showName: boolean };
-  hero: { headline: string; subheadline: string; ctaLabel: string; imageUrl: string };
+  kind: SiteKind;
+  hero: { headline: string; subheadline: string; ctaLabel: string; imageUrl: string; gallery: string[]; rotating: string[] };
+  booking: { message: string };
+  highlight: { title: string; name: string; description: string; price: string; imageUrl: string };
+  catalog: { title: string; categories: Array<{ name: string; items: CatalogItem[] }> };
+  gallery: { title: string; images: Array<{ url: string; caption: string }> };
+  team: { title: string; members: Array<{ name: string; role: string; imageUrl: string }> };
+  plans: { title: string; items: WebsitePlan[] };
+  schedule: { title: string; entries: Array<{ day: WeekDay; time: string; name: string }> };
+  partners: { title: string; items: string[] };
+  faq: { title: string; items: Array<{ q: string; a: string }> };
+  band: { imageUrl: string; text: string };
   about: { title: string; text: string; imageUrl: string };
   services: { title: string; items: Array<{ name: string; description: string; imageUrl: string }> };
   testimonials: { title: string; items: WebsiteTestimonial[] };
@@ -268,7 +298,7 @@ export interface WebsiteTheme {
   style: SiteStyle;
 }
 
-export type SitePhotoKind = "logo" | "capa" | "sobre" | "servico";
+export type SitePhotoKind = "logo" | "capa" | "sobre" | "servico" | "galeria" | "prato" | "equipa" | "faixa";
 
 export interface WebsiteSummary {
   id: string;

@@ -1,6 +1,7 @@
 import { put } from "@vercel/blob";
 
-// Upload das fotos dos sites (logotipo, capa, sobre, serviços) para o Vercel Blob.
+// Upload das fotos dos sites (logotipo, capa, sobre, serviços, galeria, pratos, equipa,
+// faixa) para o Vercel Blob.
 // A sessão é validada no backend (/api/auth/me) e só utilizadores Pro podem enviar.
 // O browser já comprime a foto antes de a enviar; aqui confirmamos pelos primeiros
 // bytes que é mesmo uma imagem JPEG, PNG ou WebP (o tipo declarado não chega).
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const MAX_BYTES = 4 * 1024 * 1024;
-const KINDS = new Set(["logo", "capa", "sobre", "servico"]);
+const KINDS = new Set(["logo", "capa", "sobre", "servico", "galeria", "prato", "equipa", "faixa"]);
 
 function json(body: unknown, status: number) {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });

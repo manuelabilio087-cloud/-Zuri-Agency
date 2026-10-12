@@ -21,7 +21,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+// 1 MB: o conteúdo de um site (menu, galeria, equipa…) pode passar os 100 KB por defeito.
+app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(morgan(env.isProduction ? "combined" : "dev"));
 

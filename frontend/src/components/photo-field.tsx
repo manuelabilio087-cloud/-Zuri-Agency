@@ -8,10 +8,31 @@ import { compressImage, ImageError } from "@/lib/image";
 
 const SETTINGS: Record<SitePhotoKind, { maxSize: number; quality: number; keepTransparency: boolean }> = {
   capa: { maxSize: 2000, quality: 0.8, keepTransparency: false },
+  faixa: { maxSize: 2000, quality: 0.8, keepTransparency: false },
   sobre: { maxSize: 1400, quality: 0.82, keepTransparency: false },
+  galeria: { maxSize: 1400, quality: 0.82, keepTransparency: false },
   servico: { maxSize: 1100, quality: 0.82, keepTransparency: false },
+  prato: { maxSize: 1100, quality: 0.82, keepTransparency: false },
+  equipa: { maxSize: 700, quality: 0.82, keepTransparency: false },
   logo: { maxSize: 600, quality: 0.9, keepTransparency: true },
 };
+
+// Comprime no browser e envia. Devolve o URL público da foto.
+export async function uploadSitePhotoFile(
+  file: File,
+  kind: SitePhotoKind,
+  accessToken: string,
+  onStage?: (text: string) => void
+): Promise<string> {
+  onStage?.("A otimizar…");
+  const compressed = await compressImage(file, SETTINGS[kind]);
+  onStage?.("A enviar…");
+  return api.uploadSitePhoto(accessToken, compressed, kind);
+}
+
+export function uploadErrorText(err: unknown): string {
+  return err instanceof ImageError || err instanceof ApiError ? err.message : "Não foi possível enviar a foto. Tenta de novo.";
+}
 
 type Status = { stage: "idle" } | { stage: "working"; text: string } | { stage: "error"; text: string };
 
@@ -38,16 +59,11 @@ export function PhotoField({
   async function handleFile(file: File | undefined) {
     if (!file || !accessToken || busy) return;
     try {
-      setStatus({ stage: "working", text: "A otimizar…" });
-      const compressed = await compressImage(file, SETTINGS[kind]);
-      setStatus({ stage: "working", text: "A enviar…" });
-      const url = await api.uploadSitePhoto(accessToken, compressed, kind);
+      const url = await uploadSitePhotoFile(file, kind, accessToken, (text) => setStatus({ stage: "working", text }));
       onChange(url);
       setStatus({ stage: "idle" });
     } catch (err) {
-      const text =
-        err instanceof ImageError || err instanceof ApiError ? err.message : "Não foi possível enviar a foto. Tenta de novo.";
-      setStatus({ stage: "error", text });
+      setStatus({ stage: "error", text: uploadErrorText(err) });
     } finally {
       if (inputRef.current) inputRef.current.value = "";
     }
@@ -132,8 +148,15 @@ export function PhotoField({
     );
   }
 
-  // Caixa grande (logotipo, capa, sobre)
-  const aspect = kind === "capa" ? "aspect-[16/9]" : kind === "sobre" ? "aspect-[4/3]" : "h-24";
+  // Caixa grande (logotipo, capa, sobre, prato da casa, faixa)
+  const aspect =
+    kind === "capa" || kind === "faixa"
+      ? "aspect-[16/9]"
+      : kind === "sobre" || kind === "prato" || kind === "galeria"
+        ? "aspect-[4/3]"
+        : kind === "equipa"
+          ? "aspect-square"
+          : "h-24";
   return (
     <div>
       {picker}
